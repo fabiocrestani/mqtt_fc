@@ -1,6 +1,6 @@
 CC=gcc
 CFLAGS=-I.
-OBJ = mqtt_fc.o
+OBJ = mqtt_fc.o tcp.o logger.o
 
 RM := rm -rf
 
