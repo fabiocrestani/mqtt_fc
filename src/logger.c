@@ -11,44 +11,7 @@
 
 #include "mqtt_fc.h"
 
-const char * translate_message_type(uint8_t message_type);
-
-void dump_fixed_header(uint8_t byte1, uint8_t byte2)
-{
-	FixedHeader header;
-	header.byte1 = byte1;
-	header.byte2 = byte2;
-
-	printf("Fixed header:\n");
-	printf("byte1: 0x%02x\n    message_type: 0x%x (%s)\n    \
-DUP flag: 0x%x\n    QoS flags: 0x%x\n    RETAIN: 0x%x\n\
-byte2: 0x%02x\n    remaining length: %d\n",
-		header.byte1, header.message_type, 
-		translate_message_type(header.message_type), header.dup_flag, 
-		header.qos_flags, header.retain, header.byte2, header.remaining_length);
-}
-
-const char * translate_message_type(uint8_t message_type)
-{
-	switch (message_type)
-	{
-		case 0x1: return "CONNECT";
-		case 0x2: return "CONNACK";
-		case 0x3: return "PUBLISH";
-		case 0x4: return "PUBACK";
-		case 0x5: return "PBUREC";
-		case 0x6: return "PUBREL";
-		case 0x7: return "PUBCOMP";
-		case 0x8: return "SUBSCRIBE";
-		case 0x9: return "SUBACK";
-		case 0xA: return "UNSUBSCRIBE";
-		case 0xB: return "UNSUBACK";
-		case 0xC: return "PINGREQ";
-		case 0xD: return "PINGRESP";
-		case 0xE: return "DISCONNECT";
-		default: return "?";
-	}
-}
+const char * translate_message_type(MessageType message_type);
 
 void dump(char *data, uint32_t len)
 {
@@ -110,3 +73,64 @@ void dump(char *data, uint32_t len)
 	}
 	printf("\n\n");
 }
+
+void dump_fixed_header(FixedHeader header)
+{
+	printf("Fixed header:\n");
+	printf("byte1: 0x%02x | type: 0x%x (%s) DUP: 0x%x QoS: 0x%x RETAIN: 0x%x\n\
+byte2: 0x%02x | remaining length: %d\n",
+		header.byte1, header.message_type, 
+		translate_message_type(header.message_type), header.dup, 
+		header.qos, header.retain, header.byte2, header.remaining_length);
+}
+
+void dump_connect_message(ConnectMessage message)
+{
+	char buffer[1024];
+	uint32_t len = 0;
+
+	buffer[len++] = message.header.byte1;
+	buffer[len++] = message.header.byte2;
+	buffer[len++] = message.length_msb;
+	buffer[len++] = message.length_lsb;
+	buffer[len++] = message.protocol_name[0];
+	buffer[len++] = message.protocol_name[1];
+	buffer[len++] = message.protocol_name[2];
+	buffer[len++] = message.protocol_name[3];
+	buffer[len++] = message.version;
+	buffer[len++] = message.flags;
+	buffer[len++] = message.keep_alive_timer;
+
+	uint32_t payload_len = 7;
+	for (uint32_t i = 0; i < payload_len; i++)
+	{
+		buffer[len++] = message.payload[i];
+	}
+
+	dump(buffer, len);
+}
+
+const char * translate_message_type(MessageType message_type)
+{
+	switch (message_type)
+	{
+		case CONNECT: return "CONNECT";
+		case CONNACK: return "CONNACK";
+		case PUBLISH: return "PUBLISH";
+		case PUBACK: return "PUBACK";
+		case PBUREC: return "PBUREC";
+		case PUBREL: return "PUBREL";
+		case PUBCOMP: return "PUBCOMP";
+		case SUBSCRIBE: return "SUBSCRIBE";
+		case SUBACK: return "SUBACK";
+		case UNSUBSCRIBE: return "UNSUBSCRIBE";
+		case UNSUBACK: return "UNSUBACK";
+		case PINGREQ: return "PINGREQ";
+		case PINGRESP: return "PINGRESP";
+		case DISCONNECT: return "DISCONNECT";
+		default: return "?";
+	}
+}
+
+
+

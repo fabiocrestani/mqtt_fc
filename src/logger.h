@@ -11,7 +11,8 @@
 #include <unistd.h>
 #include <string.h>
 
-void dump_fixed_header(uint8_t byte1, uint8_t byte2);
+void dump_fixed_header(FixedHeader header);
+void dump_connect_message(ConnectMessage message);
 void dump(char *data, uint32_t len);
 
 #endif // __LOGGER_H__

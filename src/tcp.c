@@ -44,7 +44,7 @@ uint8_t tcp_connect()
     
 	if (connect(sockfd,(struct sockaddr *) &serv_addr,sizeof(serv_addr)) < 0)
     {
-        printf("ERROR connecting");
+        printf("ERROR connecting\n");
 		return FALSE;
     }
 
@@ -57,7 +57,7 @@ uint8_t tcp_send(char buffer[], uint32_t len)
     n = write(sockfd, buffer, len);
     if (n < 0)
     {
-        printf("ERROR writing to socket");
+        printf("ERROR writing to socket\n");
 		return FALSE;
     }
 
@@ -69,7 +69,7 @@ uint8_t tcp_receive(char buffer[], uint32_t *len)
     int n = read(sockfd, buffer, 255);
     if (n < 0)
     {
-        printf("ERROR reading from socket");
+        printf("ERROR reading from socket\n");
 		return FALSE;
     }
 
