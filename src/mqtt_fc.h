@@ -14,8 +14,7 @@
 #define KEEP_ALIVE_TIMER_VALUE (60)
 
 #define CONNECT_PROTOCOL_NAME_MAX_LEN (255)
-#define CONNECT_CLIENT_ID_MAX_LEN (255)
-#define COONECT_CLIENT_ID_MAX_LEN (23)
+#define CONNECT_CLIENT_ID_MAX_LEN (23)
 
 #define PUBLISH_TOPIC_NAME_MAX_LEN (255)
 
@@ -54,6 +53,8 @@ typedef struct FixedHeader_ {
 	};
 } FixedHeader;
 
+// When a TCP/IP socket connection is established from a client to a server, 
+// a protocol level session must be created using a CONNECT flow.
 typedef struct ConnectMessage_ {
 	FixedHeader header;
 
@@ -99,9 +100,38 @@ typedef struct ConnectMessage_ {
 	};
 
 	uint8_t client_id[CONNECT_CLIENT_ID_MAX_LEN];
-
 } ConnectMessage;
 
+typedef enum {
+	E_CONNACK_CONNECTION_ACCEPTED = 0x0,
+	E_CONNACK_UNACCEPTABLE_PROTOCOL_VERSION = 0x01,
+	E_CONNACK_IDENTIFIER_REJECTED = 0x02,
+	E_CONNACK_SERVER_UNAVAILABLE = 0x03,
+	E_CONNACK_BAD_USER_NAME_OR_PASSWORD = 0x04,
+	E_CONNACK_NOT_AUTHORIZED = 0x05,
+} EConnakReturnCode;
+
+// The CONNACK message is the message sent by the server in response to a 
+// CONNECT request from a client.
+typedef struct ConnackMessage_ {
+	FixedHeader header;
+	union {
+		struct {
+			uint8_t byte1;
+			EConnakReturnCode return_code;
+		};
+		uint8_t message[2];
+	};
+} ConnackMessage;
+
+// A PUBLISH message is sent by a client to a server for distribution to 
+// interested subscribers. Each PUBLISH message is associated with a topic name
+// (also known as the Subject or Channel). This is a hierarchical name space 
+// that defines a taxonomy of information sources for which subscribers can 
+// register an interest. A message that is published to a specific topic name 
+// is delivered to connected subscribers for that topic. If a client subscribes 
+// to one or more topics, any message published to those topics are sent by the
+// server to the client as a PUBLISH message.
 typedef struct PublishMessage_ {
 	FixedHeader header;
 	uint8_t topic_name[PUBLISH_TOPIC_NAME_MAX_LEN];
@@ -111,7 +141,7 @@ typedef struct PublishMessage_ {
 		struct {
 			uint8_t message_id_lsb;
 			uint8_t	message_id_msb;
-		};
+		};	
 	};
 } PublishMessage;
 

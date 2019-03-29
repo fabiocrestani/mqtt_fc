@@ -20,7 +20,8 @@ void dump(char *data, uint32_t len)
 	uint32_t temp_idx = 0;
 	uint32_t byte_counter = 0;
 
-	printf("\n    ");
+	printf("Dumping %d bytes:\n", len);
+	printf("    ");
 
 	for (uint32_t i = 0; i < 8; i++)
 	{
@@ -75,7 +76,7 @@ void dump(char *data, uint32_t len)
 	printf("\n\n");
 }
 
-void dump_fixed_header(FixedHeader header)
+void dump_parsed_fixed_header(FixedHeader header)
 {
 	printf("Fixed header:\n");
 	printf("byte1: 0x%02x {type: 0x%x (%s) DUP: 0x%x QoS: 0x%x RETAIN: 0x%x}\n\
@@ -84,6 +85,21 @@ byte2: 0x%02x {remaining length: %d}\n",
 		translate_message_type(header.message_type), header.dup, 
 		header.qos, header.retain, header.byte2, header.remaining_length);
 }
+
+void dump_parsed_connect_message(ConnectMessage message)
+{
+	printf("Connect message:\n");
+	printf("Protocol name (%d): %s Version: %d User name flag: %d \
+Password flag: %d\nWill retain flag: %d Will QoS flag: %d Will flag: %d\
+\nClean Session flag: %d Reserved flag: %d Keep alive timer: %d\n\
+Client ID (%d): %s\n",
+		message.protocol_name_len, message.protocol_name, message.version,
+		message.user_name_flag, message.password_flag, message.will_retain_flag,
+		message.will_qos_flag, message.will_flag, message.clean_session_flag,
+		message.reserved_flag, message.keep_alive_timer, message.client_id_len,
+		message.client_id);
+}
+
 
 void dump_connect_message(ConnectMessage message)
 {

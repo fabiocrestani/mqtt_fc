@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS=-I.
+CFLAGS=-I. -Wall -Wextra
 OBJ = mqtt_fc.o tcp.o logger.o
 
 RM := rm -rf
@@ -15,6 +15,9 @@ mqtt_fc: $(OBJ)
 
 %.o: %.c
 	$(CC) -c -o $@ $< $(CFLAGS)
+
+run: mqtt_fc
+	./mqtt_fc
 
 clean:
 	-$(RM) $(EXECUTABLES)$(OBJS)$(C_DEPS) mqtt_fc
