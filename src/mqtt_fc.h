@@ -1,5 +1,5 @@
 /*
- * mqtt.h
+ * mqtt_fc.h
  * Author: Fabio Crestani
  */
 
@@ -9,8 +9,14 @@
 #define TRUE (1)
 #define FALSE (0)
 
+#define MQTT_VERSION (3)
+
+#define KEEP_ALIVE_TIMER_VALUE (60)
+
 #define CONNECT_PROTOCOL_NAME_MAX_LEN (255)
-#define CONNECT_PAYLOAD_MAX_LEN (255)
+#define CONNECT_CLIENT_ID_MAX_LEN (255)
+#define COONECT_CLIENT_ID_MAX_LEN (23)
+
 #define PUBLISH_TOPIC_NAME_MAX_LEN (255)
 
 typedef enum MessageType_ {
@@ -52,16 +58,28 @@ typedef struct ConnectMessage_ {
 	FixedHeader header;
 
 	union {
-		uint16_t length;
+		uint16_t protocol_name_len;
 		struct {
-			uint8_t length_lsb;
-			uint8_t length_msb;
+			uint8_t protocol_name_len_lsb;
+			uint8_t protocol_name_len_msb;
 		};
 	};
 
 	uint8_t protocol_name[CONNECT_PROTOCOL_NAME_MAX_LEN];
 	uint8_t version;
-	uint8_t flags;
+
+	union {
+		uint8_t flags;
+		struct {
+			uint8_t reserved_flag : 1;	
+			uint8_t clean_session_flag : 1;
+			uint8_t will_flag : 1;
+			uint8_t will_qos_flag : 2;
+			uint8_t will_retain_flag : 1;
+			uint8_t password_flag : 1;
+			uint8_t user_name_flag : 1;
+		};
+	};
 
 	union {
 		uint16_t keep_alive_timer;
@@ -71,7 +89,17 @@ typedef struct ConnectMessage_ {
 		};
 	};
 
-	uint8_t payload[CONNECT_PAYLOAD_MAX_LEN];
+	union
+	{
+		uint16_t client_id_len;
+		struct {
+			uint8_t client_id_len_lsb;
+			uint8_t client_id_len_msb;
+		};
+	};
+
+	uint8_t client_id[CONNECT_CLIENT_ID_MAX_LEN];
+
 } ConnectMessage;
 
 typedef struct PublishMessage_ {

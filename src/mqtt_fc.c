@@ -16,6 +16,7 @@
 #include "mqtt_fc.h"
 #include "tcp.h"
 #include "logger.h"
+#include "utils.h"
 
 void error(char *msg)
 {
@@ -35,37 +36,51 @@ FixedHeader mqtt_build_fixed_header(uint8_t message_type, uint8_t dup,
 	return header;
 }
 
-ConnectMessage mqtt_build_connect_message()
+ConnectMessage mqtt_build_connect_message(char protocol_name[],
+	char client_id[])
 {
 	ConnectMessage m;
+	uint16_t keep_alive_timer_value = KEEP_ALIVE_TIMER_VALUE;
+	uint16_t protocol_name_len = strlen(protocol_name);
+	uint16_t client_id_len = strlen(client_id);
 	uint8_t remaining_length = 0;
+
+	protocol_name_len = (protocol_name_len <= CONNECT_PROTOCOL_NAME_MAX_LEN) ?
+						 protocol_name_len : CONNECT_PROTOCOL_NAME_MAX_LEN;
+	client_id_len = (client_id_len <= COONECT_CLIENT_ID_MAX_LEN) ? 
+					client_id_len : COONECT_CLIENT_ID_MAX_LEN;
 
 	m.header.message_type = CONNECT;
 	m.header.dup = 0;
 	m.header.qos = 0;
 	m.header.retain = 0;
 
-	char protocol_name[] = "MQTT";
-	uint16_t protocol_name_len = strlen(protocol_name);
-	m.length = protocol_name_len;
+	m.protocol_name_len = protocol_name_len;
 	strcpy(m.protocol_name, protocol_name);
-	remaining_length += 2 + protocol_name_len;
+	remaining_length = 2 + protocol_name_len;
 
-	m.version = 4;
-	m.flags = 0x02;
-	m.keep_alive_timer = 0;
-	remaining_length += 3;
+	m.version = MQTT_VERSION;
+	m.reserved_flag = 0;
+	m.clean_session_flag = 1;
+	m.will_flag = 0;
+	m.will_qos_flag = 0;
+	m.will_retain_flag = 0;
+	m.password_flag = 0;
+	m.user_name_flag = 0;
+	m.keep_alive_timer_msb = GET_MSB(keep_alive_timer_value);
+	m.keep_alive_timer_lsb = GET_LSB(keep_alive_timer_value);
+	remaining_length += 4;
 
-	uint32_t payload_len = 0;
-	m.payload[payload_len++] = 0x3C;
-	m.payload[payload_len++] = 0x00;
-	m.payload[payload_len++] = 0x04;
-	m.payload[payload_len++] = 0x44;
-	m.payload[payload_len++] = 0x49;
-	m.payload[payload_len++] = 0x47;
-	m.payload[payload_len++] = 0x49;
+	m.client_id_len_msb = GET_MSB(client_id_len);
+	m.client_id_len_lsb = GET_LSB(client_id_len);
+	remaining_length += 2;
 
-	remaining_length += payload_len;
+	for (uint16_t i = 0; i < client_id_len; i++)
+	{
+		m.client_id[i] = client_id[i];
+	}
+
+	remaining_length += client_id_len;
 	m.header.remaining_length = remaining_length;
 	
 	return m;
@@ -74,23 +89,29 @@ ConnectMessage mqtt_build_connect_message()
 void mqtt_pack_connect_message(ConnectMessage message, char *buffer)
 {
 	uint32_t len = 0;
+	uint16_t remaining_len = message.protocol_name_len;
 
 	buffer[len++] = message.header.byte1;
 	buffer[len++] = message.header.byte2;
-	buffer[len++] = message.length_msb;
-	buffer[len++] = message.length_lsb;
-	buffer[len++] = message.protocol_name[0];
-	buffer[len++] = message.protocol_name[1];
-	buffer[len++] = message.protocol_name[2];
-	buffer[len++] = message.protocol_name[3];
+	buffer[len++] = message.protocol_name_len_msb;
+	buffer[len++] = message.protocol_name_len_lsb;
+
+	for (uint32_t i = 0; i < remaining_len; i++)
+	{
+		buffer[len++] = message.protocol_name[i];
+	}
+
 	buffer[len++] = message.version;
 	buffer[len++] = message.flags;
-	buffer[len++] = message.keep_alive_timer;
+	buffer[len++] = message.keep_alive_timer_msb;
+	buffer[len++] = message.keep_alive_timer_lsb;
+	buffer[len++] = message.client_id_len_msb;
+	buffer[len++] = message.client_id_len_lsb;
 
-	uint32_t payload_len = 7;
-	for (uint32_t i = 0; i < payload_len; i++)
+	uint32_t client_id_len = 7;
+	for (uint32_t i = 0; i < client_id_len; i++)
 	{
-		buffer[len++] = message.payload[i];
+		buffer[len++] = message.client_id[i];
 	}
 }
 
@@ -111,7 +132,7 @@ int main(int argc, char *argv[])
 
 	printf("[mqtt] Sending CONNECT message\n");
 
-	ConnectMessage connect_message = mqtt_build_connect_message();
+	ConnectMessage connect_message = mqtt_build_connect_message("MQTT", "cafe");
 	mqtt_pack_connect_message(connect_message, buffer);
 
 	dump_connect_message(connect_message);
