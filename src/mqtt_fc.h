@@ -16,6 +16,8 @@
 #define CONNECT_PROTOCOL_NAME_MAX_LEN (255)
 #define CONNECT_CLIENT_ID_MAX_LEN (23)
 
+#define CONNACK_MESSAGE_SIZE (4)
+
 #define PUBLISH_TOPIC_NAME_MAX_LEN (255)
 
 typedef enum MessageType_ {

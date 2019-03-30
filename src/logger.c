@@ -13,6 +13,7 @@
 #include "utils.h"
 
 const char * translate_message_type(MessageType message_type);
+const char * translate_connack_return_code(EConnakReturnCode return_code);
 
 void dump(char *data, uint32_t len)
 {
@@ -100,6 +101,13 @@ Client ID (%d): %s\n",
 		message.client_id);
 }
 
+void dump_parsed_connack_message(ConnackMessage connack_message)
+{
+	printf("Connack message:\n");
+	printf("Reserved: %d Return code: (%d) %s\n",
+		connack_message.byte1, connack_message.return_code, 
+		translate_connack_return_code(connack_message.return_code));
+}
 
 void dump_connect_message(ConnectMessage message)
 {
@@ -151,6 +159,26 @@ const char * translate_message_type(MessageType message_type)
 		case PINGREQ: return "PINGREQ";
 		case PINGRESP: return "PINGRESP";
 		case DISCONNECT: return "DISCONNECT";
+		default: return "?";
+	}
+}
+
+const char * translate_connack_return_code(EConnakReturnCode return_code)
+{
+	switch (return_code)
+	{
+		case E_CONNACK_CONNECTION_ACCEPTED:
+			return "Connection Accepted";
+		case E_CONNACK_UNACCEPTABLE_PROTOCOL_VERSION:
+			return "Connection Refused: unacceptable protocol version";
+		case E_CONNACK_IDENTIFIER_REJECTED:
+			return "Connection Refused: identifier rejected";
+		case E_CONNACK_SERVER_UNAVAILABLE:
+			return "Connection Refused: server unavailable";
+		case E_CONNACK_BAD_USER_NAME_OR_PASSWORD:
+			return "Connection Refused: bad user name or password";
+		case E_CONNACK_NOT_AUTHORIZED:
+			return "Connection Refused: not authorized";
 		default: return "?";
 	}
 }

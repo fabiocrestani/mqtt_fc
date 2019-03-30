@@ -126,10 +126,18 @@ uint32_t mqtt_pack_connect_message(ConnectMessage message, char *buffer)
 	return len;
 }
 
-uint8_t mqtt_unpack_connack_message(char buffer[], 
-								    ConnackMessage *connak_message)
+uint8_t mqtt_unpack_connack_message(char buffer[], uint32_t len,
+								    ConnackMessage *connack_message)
 {
+	if (len != CONNACK_MESSAGE_SIZE)
+	{
+		return FALSE;
+	}
 
+	connack_message->header.byte1 = buffer[0];
+	connack_message->header.byte2 = buffer[1];
+	connack_message->message[0] = buffer[2];
+	connack_message->message[1] = buffer[3];
 
 	return TRUE;
 }
@@ -165,19 +173,22 @@ int main(int argc, char *argv[])
 	printf("[mqtt] CONNACK response: \n");
     dump(buffer, len);
 
-	ConnackMessage connak_message;
-	if (mqtt_unpack_connack_message(buffer, &connak_message))
+	ConnackMessage connack_message;
+	if (mqtt_unpack_connack_message(buffer, len, &connack_message))
 	{
 		FixedHeader header;
 		header.byte1 = buffer[0];
 		header.byte2 = buffer[1];
 		dump_parsed_fixed_header(header);
-		//	dump_parsed_connak_message(
+		dump_parsed_connack_message(connack_message);
 	}
 	else 
 	{
 		printf("[mqtt] Error parsing CONNACK message\n");
 	}
+
+
+	//////////////////////////////////////////////////////////////////////
 
 
 	printf("\n");
