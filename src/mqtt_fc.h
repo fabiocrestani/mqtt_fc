@@ -21,8 +21,11 @@
 #define PUBLISH_TOPIC_NAME_MAX_LEN (255)
 #define PUBLISH_PAYLOAD_MAX_LEN (255)
 
-///////////////////////////////////////////////////////////////////////////////
+#define PUBACK_MESSAGE_SIZE (4)
 
+///////////////////////////////////////////////////////////////////////////////
+// ENUMS
+///////////////////////////////////////////////////////////////////////////////
 typedef enum MessageType_ {
 	CONNECT = 0x1,
 	CONNACK = 0x2,
@@ -56,7 +59,8 @@ typedef enum {
 } EConnakReturnCode;
 
 ///////////////////////////////////////////////////////////////////////////////
-
+// STRUCTS
+///////////////////////////////////////////////////////////////////////////////
 typedef struct FixedHeader_ {
 	union {
 		uint8_t byte1;
@@ -168,5 +172,30 @@ typedef struct PublishMessage_ {
 
 	uint8_t payload[PUBLISH_PAYLOAD_MAX_LEN];
 } PublishMessage;
+
+// A PUBACK message is the response to a PUBLISH message with QoS level 1. 
+// A PUBACK message is sent by a server in response to a PUBLISH message from a 
+// publishing client, and by a subscriber in response to a PUBLISH message from 
+// the server.
+typedef struct PubAckMessage_ {
+	FixedHeader header;
+
+	union {
+		uint16_t message_id;
+		struct {
+			uint8_t message_id_lsb;
+			uint8_t	message_id_msb;
+		};	
+	};
+
+} PubAckMessage;
+
+///////////////////////////////////////////////////////////////////////////////
+// FUNCTIONS
+///////////////////////////////////////////////////////////////////////////////
+uint32_t mqtt_pack_publish_message(PublishMessage message, char *buffer);
+uint32_t mqtt_pack_connect_message(ConnectMessage message, char *buffer);
+uint32_t mqtt_pack_puback_message(PubAckMessage message, char *buffer);
+
 
 #endif // __MQTT_H__

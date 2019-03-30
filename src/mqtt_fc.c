@@ -24,6 +24,9 @@ void error(char *msg)
     exit(0);
 }
 
+///////////////////////////////////////////////////////////////////////////////
+// Build message
+///////////////////////////////////////////////////////////////////////////////
 
 FixedHeader mqtt_build_fixed_header(uint8_t message_type, uint8_t dup,
 	uint8_t qos, uint8_t retain, uint8_t remaining_length)
@@ -121,6 +124,10 @@ PublishMessage mqtt_build_publish_message(char topic_name[], uint16_t id,
 	return m;
 }
 
+///////////////////////////////////////////////////////////////////////////////
+// Pack message to a buffer
+///////////////////////////////////////////////////////////////////////////////
+
 uint32_t mqtt_pack_connect_message(ConnectMessage message, char *buffer)
 {
 	uint32_t len = 0;
@@ -154,23 +161,7 @@ uint32_t mqtt_pack_connect_message(ConnectMessage message, char *buffer)
 	return len;
 }
 
-uint8_t mqtt_unpack_connack_message(char buffer[], uint32_t len,
-								    ConnackMessage *connack_message)
-{
-	if (len != CONNACK_MESSAGE_SIZE)
-	{
-		return FALSE;
-	}
-
-	connack_message->header.byte1 = buffer[0];
-	connack_message->header.byte2 = buffer[1];
-	connack_message->message[0] = buffer[2];
-	connack_message->message[1] = buffer[3];
-
-	return TRUE;
-}
-
-uint32_t mqtt_pack_publish_message(PublishMessage message, char buffer[])
+uint32_t mqtt_pack_publish_message(PublishMessage message, char *buffer)
 {
 	uint32_t len = 0;
 
@@ -198,9 +189,60 @@ uint32_t mqtt_pack_publish_message(PublishMessage message, char buffer[])
 		buffer[len++] = message.payload[i];
 	}
 
+	return len;
+}
+
+uint32_t mqtt_pack_puback_message(PubAckMessage message, char *buffer)
+{
+	uint32_t len = 0;
+
+	buffer[len++] = message.header.byte1;
+	buffer[len++] = message.header.byte2;
+	buffer[len++] = message.message_id_msb;
+	buffer[len++] = message.message_id_lsb;
 
 	return len;
 }
+
+///////////////////////////////////////////////////////////////////////////////
+// Unpack message from a buffer
+///////////////////////////////////////////////////////////////////////////////
+
+uint8_t mqtt_unpack_connack_message(char buffer[], uint32_t len,
+								    ConnackMessage *connack_message)
+{
+	if (len != CONNACK_MESSAGE_SIZE)
+	{
+		return FALSE;
+	}
+
+	connack_message->header.byte1 = buffer[0];
+	connack_message->header.byte2 = buffer[1];
+	connack_message->message[0] = buffer[2];
+	connack_message->message[1] = buffer[3];
+
+	return TRUE;
+}
+
+uint8_t mqtt_unpack_puback_message(char buffer[], uint32_t len,
+								   PubAckMessage *puback_message)
+{
+	if (len != PUBACK_MESSAGE_SIZE)
+	{
+		return FALSE;
+	}
+
+	puback_message->header.byte1 = buffer[0];
+	puback_message->header.byte2 = buffer[1];
+	puback_message->message_id_msb = buffer[2];
+	puback_message->message_id_lsb = buffer[3];
+
+	return TRUE;
+}
+
+
+
+
 
 int main(int argc, char *argv[])
 {
@@ -218,8 +260,10 @@ int main(int argc, char *argv[])
 		printf("[tcp] Error connecting to %s:%d\n", "iot.eclipse.org", 1883);
 	}
 
+	///////////////////////////////////////////////////////////////////////////
+	// Connect
+	///////////////////////////////////////////////////////////////////////////
 	printf("\n[mqtt] Sending CONNECT message\n");
-
 	ConnectMessage connect_message = mqtt_build_connect_message("MQTT", "fabio");
 	len = mqtt_pack_connect_message(connect_message, buffer);
 
@@ -240,10 +284,9 @@ int main(int argc, char *argv[])
 		printf("[mqtt] Error parsing CONNACK message\n");
 	}
 
-
 	///////////////////////////////////////////////////////////////////////////
-
-
+	// Publish
+	///////////////////////////////////////////////////////////////////////////
 	printf("[mqtt] Sending PUBLISH message\n");
 
 	PublishMessage publish_message;
@@ -254,14 +297,19 @@ int main(int argc, char *argv[])
 
 	log_publish_message(publish_message);
 
-	dump(buffer, len);
-
 	tcp_send(buffer, len);
 	tcp_receive(buffer, &len);
 
-	printf("[mqtt] PUBLISH response\n");
-	dump(buffer, len);
+	printf("[mqtt] PUBLISH response: PUBACK\n");
+	PubAckMessage puback_message;
+	if (mqtt_unpack_puback_message(buffer, len, &puback_message))
+	{
+		log_puback_message(puback_message);
+	}
 	
 
     return 0;
 }
+
+
+

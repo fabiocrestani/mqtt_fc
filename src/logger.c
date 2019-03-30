@@ -98,7 +98,7 @@ byte2: 0x%02x {remaining length: %d}\n",
 
 void dump_parsed_connect_message(ConnectMessage message)
 {
-	printf("Connect message:\n");
+	printf("CONNECT message:\n");
 	printf("Protocol name (%d): %s Version: %d User name flag: %d \
 Password flag: %d\nWill retain flag: %d Will QoS flag: %d Will flag: %d\
 \nClean Session flag: %d Reserved flag: %d Keep alive timer: %d\n\
@@ -112,10 +112,24 @@ Client ID (%d): %s\n",
 
 void dump_parsed_connack_message(ConnackMessage connack_message)
 {
-	printf("Connack message:\n");
-	printf("Reserved: %d Return code: (%d) %s\n",
+	printf("CONNACK message:\n");
+	printf("{Reserved: %d Return code: (%d) %s}\n",
 		connack_message.byte1, connack_message.return_code, 
 		translate_connack_return_code(connack_message.return_code));
+}
+
+void dump_parsed_publish_message(PublishMessage publish_message)
+{
+	printf("PUBLISH message: ");
+	printf("{Topic name: (%d) %s Message Identifier: %d}\n",
+			publish_message.topic_name_len, publish_message.topic_name, 
+			publish_message.message_id);
+}
+
+void dump_parsed_puback_message(PubAckMessage puback_message)
+{
+	printf("PUBACK message: ");
+	printf("{Message ID: %d}\n", puback_message.message_id);
 }
 
 void dump_connect_message(ConnectMessage message)
@@ -123,31 +137,7 @@ void dump_connect_message(ConnectMessage message)
 #if LOG_DUMP_CONNECT == TRUE
 	char buffer[1024];
 	uint32_t len = 0;
-	uint16_t protocol_name_len = message.protocol_name_len;
-	uint16_t client_id_len = message.client_id_len;
-
-	buffer[len++] = message.header.byte1;
-	buffer[len++] = message.header.byte2;
-	buffer[len++] = message.protocol_name_len_msb;
-	buffer[len++] = message.protocol_name_len_lsb;
-
-	for (uint16_t i = 0; i < protocol_name_len; i++)
-	{
-		buffer[len++] = message.protocol_name[i];
-	}
-
-	buffer[len++] = message.version;
-	buffer[len++] = message.flags;
-	buffer[len++] = message.keep_alive_timer_msb;
-	buffer[len++] = message.keep_alive_timer_lsb;
-	buffer[len++] = message.client_id_len_msb;
-	buffer[len++] = message.client_id_len_lsb;
-
-	for (uint32_t i = 0; i < client_id_len; i++)
-	{
-		buffer[len++] = message.client_id[i];
-	}
-
+	len = mqtt_pack_connect_message(message, buffer);
 	dump(buffer, len);
 #else
 	(void) message;
@@ -159,25 +149,25 @@ void dump_publish_message(PublishMessage message)
 #if LOG_DUMP_PUBLISH == TRUE
 	char buffer[1024];
 	uint32_t len = 0;
-
-	buffer[len++] = message.header.byte1;
-	buffer[len++] = message.header.byte2;
-	buffer[len++] = message.topic_name_len_msb;
-	buffer[len++] = message.topic_name_len_lsb;
-
-	for (uint16_t i = 0; i < message.topic_name_len; i++)
-	{
-		buffer[len++] = message.topic_name[i];
-	}
-
-	buffer[len++] = message.message_id_msb;
-	buffer[len++] = message.message_id_lsb;
-
+	len = mqtt_pack_publish_message(message, buffer);
 	dump(buffer, len);
 #else
 	(void) message;
 #endif
 }
+
+void dump_puback_message(PubAckMessage message)
+{
+#if LOG_DUMP_PUBACK == TRUE
+	char buffer[1024];
+	uint32_t len = 0;
+	len = mqtt_pack_puback_message(message, buffer);
+	dump(buffer, len);
+#else
+	(void) message;
+#endif
+}
+
 
 void log_connect_message(ConnectMessage connect_message)
 {
@@ -202,7 +192,18 @@ void log_publish_message(PublishMessage publish_message)
 {
 	logger_print_separator();
 	dump_parsed_fixed_header(publish_message.header);
+	dump_parsed_publish_message(publish_message);
 	dump_publish_message(publish_message);
+	logger_print_separator();
+	printf("\n");
+}
+
+void log_puback_message(PubAckMessage puback_message)
+{
+	logger_print_separator();
+	dump_parsed_fixed_header(puback_message.header);
+	dump_parsed_puback_message(puback_message);
+	dump_puback_message(puback_message);
 	logger_print_separator();
 	printf("\n");
 }
