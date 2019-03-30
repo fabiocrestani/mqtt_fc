@@ -9,7 +9,7 @@
 #define TRUE (1)
 #define FALSE (0)
 
-#define MQTT_VERSION (3)
+#define MQTT_VERSION (4)
 
 #define KEEP_ALIVE_TIMER_VALUE (60)
 
@@ -19,6 +19,9 @@
 #define CONNACK_MESSAGE_SIZE (4)
 
 #define PUBLISH_TOPIC_NAME_MAX_LEN (255)
+#define PUBLISH_PAYLOAD_MAX_LEN (255)
+
+///////////////////////////////////////////////////////////////////////////////
 
 typedef enum MessageType_ {
 	CONNECT = 0x1,
@@ -36,6 +39,23 @@ typedef enum MessageType_ {
 	PINGRESP = 0xD,
 	DISCONNECT = 0xE
 } MessageType;
+
+typedef enum EQosLevel_ {
+	E_QOS_NONE = 0,
+	E_QOS_PUBACK = 1,
+	E_QOS_PUBREC = 2
+} EQosLevel;
+
+typedef enum {
+	E_CONNACK_CONNECTION_ACCEPTED = 0x0,
+	E_CONNACK_UNACCEPTABLE_PROTOCOL_VERSION = 0x01,
+	E_CONNACK_IDENTIFIER_REJECTED = 0x02,
+	E_CONNACK_SERVER_UNAVAILABLE = 0x03,
+	E_CONNACK_BAD_USER_NAME_OR_PASSWORD = 0x04,
+	E_CONNACK_NOT_AUTHORIZED = 0x05,
+} EConnakReturnCode;
+
+///////////////////////////////////////////////////////////////////////////////
 
 typedef struct FixedHeader_ {
 	union {
@@ -104,15 +124,6 @@ typedef struct ConnectMessage_ {
 	uint8_t client_id[CONNECT_CLIENT_ID_MAX_LEN];
 } ConnectMessage;
 
-typedef enum {
-	E_CONNACK_CONNECTION_ACCEPTED = 0x0,
-	E_CONNACK_UNACCEPTABLE_PROTOCOL_VERSION = 0x01,
-	E_CONNACK_IDENTIFIER_REJECTED = 0x02,
-	E_CONNACK_SERVER_UNAVAILABLE = 0x03,
-	E_CONNACK_BAD_USER_NAME_OR_PASSWORD = 0x04,
-	E_CONNACK_NOT_AUTHORIZED = 0x05,
-} EConnakReturnCode;
-
 // The CONNACK message is the message sent by the server in response to a 
 // CONNECT request from a client.
 typedef struct ConnackMessage_ {
@@ -120,7 +131,7 @@ typedef struct ConnackMessage_ {
 	union {
 		struct {
 			uint8_t byte1;
-			EConnakReturnCode return_code;
+			uint8_t return_code;
 		};
 		uint8_t message[2];
 	};
@@ -136,15 +147,26 @@ typedef struct ConnackMessage_ {
 // server to the client as a PUBLISH message.
 typedef struct PublishMessage_ {
 	FixedHeader header;
+
+	union {
+		uint16_t topic_name_len;
+		struct {
+			uint8_t topic_name_len_lsb;
+			uint8_t topic_name_len_msb;
+		};	
+	};
+
 	uint8_t topic_name[PUBLISH_TOPIC_NAME_MAX_LEN];
 
 	union {
-		uint8_t message_id[2];
+		uint16_t message_id;
 		struct {
 			uint8_t message_id_lsb;
 			uint8_t	message_id_msb;
 		};	
 	};
+
+	uint8_t payload[PUBLISH_PAYLOAD_MAX_LEN];
 } PublishMessage;
 
 #endif // __MQTT_H__

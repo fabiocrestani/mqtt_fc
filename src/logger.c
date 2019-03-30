@@ -10,13 +10,18 @@
 #include <stdint.h>
 
 #include "mqtt_fc.h"
+#include "logger.h"
 #include "utils.h"
+
+void logger_print_separator(void);
 
 const char * translate_message_type(MessageType message_type);
 const char * translate_connack_return_code(EConnakReturnCode return_code);
+const char * translate_qos_level(EQosLevel qos_level);
 
 void dump(char *data, uint32_t len)
 {
+#if LOG_DUMP == TRUE
 	char temp[9];
 	uint32_t temp_idx = 0;
 	uint32_t byte_counter = 0;
@@ -65,7 +70,7 @@ void dump(char *data, uint32_t len)
 	printf("\t");
 	for (uint32_t j = 0; j < temp_idx; j++)
 	{
-		if ((temp[j] > 33) && (temp[j] < 127))
+		if (((temp[j] > 33) && (temp[j] < 127)) || (temp[j] == ' '))
 		{
 			printf("%c", temp[j]);
 		}
@@ -74,7 +79,11 @@ void dump(char *data, uint32_t len)
 			printf(".");
 		}
 	}
-	printf("\n\n");
+	printf("\n");
+#else
+	(void) data;
+	(void) len;
+#endif
 }
 
 void dump_parsed_fixed_header(FixedHeader header)
@@ -111,6 +120,7 @@ void dump_parsed_connack_message(ConnackMessage connack_message)
 
 void dump_connect_message(ConnectMessage message)
 {
+#if LOG_DUMP_CONNECT == TRUE
 	char buffer[1024];
 	uint32_t len = 0;
 	uint16_t protocol_name_len = message.protocol_name_len;
@@ -139,6 +149,68 @@ void dump_connect_message(ConnectMessage message)
 	}
 
 	dump(buffer, len);
+#else
+	(void) message;
+#endif
+}
+
+void dump_publish_message(PublishMessage message)
+{
+#if LOG_DUMP_PUBLISH == TRUE
+	char buffer[1024];
+	uint32_t len = 0;
+
+	buffer[len++] = message.header.byte1;
+	buffer[len++] = message.header.byte2;
+	buffer[len++] = message.topic_name_len_msb;
+	buffer[len++] = message.topic_name_len_lsb;
+
+	for (uint16_t i = 0; i < message.topic_name_len; i++)
+	{
+		buffer[len++] = message.topic_name[i];
+	}
+
+	buffer[len++] = message.message_id_msb;
+	buffer[len++] = message.message_id_lsb;
+
+	dump(buffer, len);
+#else
+	(void) message;
+#endif
+}
+
+void log_connect_message(ConnectMessage connect_message)
+{
+	logger_print_separator();
+	dump_connect_message(connect_message);
+	dump_parsed_fixed_header(connect_message.header);
+	dump_parsed_connect_message(connect_message);
+	logger_print_separator();
+	printf("\n");
+}
+
+void log_connack_message(ConnackMessage connack_message)
+{
+	logger_print_separator();
+	dump_parsed_fixed_header(connack_message.header);
+	dump_parsed_connack_message(connack_message);
+	logger_print_separator();
+	printf("\n");
+}
+
+void log_publish_message(PublishMessage publish_message)
+{
+	logger_print_separator();
+	dump_parsed_fixed_header(publish_message.header);
+	dump_publish_message(publish_message);
+	logger_print_separator();
+	printf("\n");
+}
+
+void logger_print_separator(void)
+{
+	printf("----------------------------------------\
+----------------------------------------\n");
 }
 
 const char * translate_message_type(MessageType message_type)
@@ -183,5 +255,14 @@ const char * translate_connack_return_code(EConnakReturnCode return_code)
 	}
 }
 
-
+const char * translate_qos_level(EQosLevel qos_level)
+{
+	switch (qos_level)
+	{
+		case E_QOS_NONE: return "None";
+		case E_QOS_PUBACK: return "PUBACK";
+		case E_QOS_PUBREC: return "PUBREC";
+		default: return "?";
+	}
+}
 

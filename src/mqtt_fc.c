@@ -46,10 +46,9 @@ ConnectMessage mqtt_build_connect_message(char protocol_name[],
 	uint16_t client_id_len = strlen(client_id);
 	uint8_t remaining_length = 0;
 
-	protocol_name_len = (protocol_name_len <= CONNECT_PROTOCOL_NAME_MAX_LEN) ?
-						 protocol_name_len : CONNECT_PROTOCOL_NAME_MAX_LEN;
-	client_id_len = (client_id_len <= CONNECT_CLIENT_ID_MAX_LEN) ? 
-					client_id_len : CONNECT_CLIENT_ID_MAX_LEN;
+	protocol_name_len = LIMITER(protocol_name_len,
+								CONNECT_PROTOCOL_NAME_MAX_LEN);
+	client_id_len = LIMITER(client_id_len, CONNECT_CLIENT_ID_MAX_LEN);
 
 	m.header.message_type = CONNECT;
 	m.header.dup = 0;
@@ -92,6 +91,36 @@ ConnectMessage mqtt_build_connect_message(char protocol_name[],
 	return m;
 }
 
+PublishMessage mqtt_build_publish_message(char topic_name[], uint16_t id, 
+										  char payload[], uint32_t payload_len)
+{	
+	PublishMessage m;
+
+	uint32_t topic_name_len = strlen(topic_name);
+	topic_name_len = LIMITER(topic_name_len, PUBLISH_TOPIC_NAME_MAX_LEN);
+
+	m.topic_name_len = topic_name_len;
+	
+	for (uint32_t i = 0; i < topic_name_len; i++)
+	{
+		m.topic_name[i] = topic_name[i];
+	}
+
+	m.message_id = id;
+
+	payload_len = LIMITER(payload_len, PUBLISH_PAYLOAD_MAX_LEN);
+
+	for (uint32_t i = 0; i < payload_len; i++)
+	{
+		m.payload[i] = payload[i];
+	}
+
+	m.header = mqtt_build_fixed_header(PUBLISH, 0, 1, 0, 
+										topic_name_len + 4 + payload_len);
+
+	return m;
+}
+
 uint32_t mqtt_pack_connect_message(ConnectMessage message, char *buffer)
 {
 	uint32_t len = 0;
@@ -114,9 +143,8 @@ uint32_t mqtt_pack_connect_message(ConnectMessage message, char *buffer)
 	buffer[len++] = message.client_id_len_msb;
 	buffer[len++] = message.client_id_len_lsb;
 
-	uint32_t client_id_len = 
-		(message.client_id_len < CONNECT_CLIENT_ID_MAX_LEN) ? 
-		message.client_id_len : CONNECT_CLIENT_ID_MAX_LEN;
+	uint32_t client_id_len = LIMITER(message.client_id_len,
+									CONNECT_CLIENT_ID_MAX_LEN);
 
 	for (uint32_t i = 0; i < client_id_len; i++)
 	{
@@ -142,11 +170,44 @@ uint8_t mqtt_unpack_connack_message(char buffer[], uint32_t len,
 	return TRUE;
 }
 
+uint32_t mqtt_pack_publish_message(PublishMessage message, char buffer[])
+{
+	uint32_t len = 0;
+
+	buffer[len++] = message.header.byte1;
+	buffer[len++] = message.header.byte2;
+
+	uint32_t topic_name_len = message.topic_name_len;
+	topic_name_len = LIMITER(topic_name_len, PUBLISH_TOPIC_NAME_MAX_LEN);
+
+	buffer[len++] = message.topic_name_len_msb;
+	buffer[len++] = message.topic_name_len_lsb;
+
+	for (uint32_t i = 0; i < topic_name_len; i++)
+	{
+		buffer[len++] = message.topic_name[i];
+	}
+
+	buffer[len++] = message.message_id_msb;
+	buffer[len++] = message.message_id_lsb;
+
+	uint32_t payload_len = message.header.remaining_length - len + 2;
+
+	for (uint32_t i = 0; i < payload_len; i++)
+	{
+		buffer[len++] = message.payload[i];
+	}
+
+
+	return len;
+}
 
 int main(int argc, char *argv[])
 {
     char buffer[1024];
 	unsigned int len = 18;
+
+	printf("\n");
 
 	if (tcp_connect())
 	{
@@ -157,30 +218,22 @@ int main(int argc, char *argv[])
 		printf("[tcp] Error connecting to %s:%d\n", "iot.eclipse.org", 1883);
 	}
 
-	printf("[mqtt] Sending CONNECT message\n");
+	printf("\n[mqtt] Sending CONNECT message\n");
 
 	ConnectMessage connect_message = mqtt_build_connect_message("MQTT", "fabio");
 	len = mqtt_pack_connect_message(connect_message, buffer);
 
-	dump_connect_message(connect_message);
-	//dump_parsed_fixed_header(connect_message.header);
-	//dump_parsed_connect_message(connect_message);
-	dump(buffer, len);
+	log_connect_message(connect_message);
 
 	tcp_send(buffer, len);
 	tcp_receive(buffer, &len);
 
-	printf("[mqtt] CONNACK response: \n");
-    dump(buffer, len);
+	printf("[mqtt] CONNACK response\n");
 
 	ConnackMessage connack_message;
 	if (mqtt_unpack_connack_message(buffer, len, &connack_message))
 	{
-		FixedHeader header;
-		header.byte1 = buffer[0];
-		header.byte2 = buffer[1];
-		dump_parsed_fixed_header(header);
-		dump_parsed_connack_message(connack_message);
+		log_connack_message(connack_message);
 	}
 	else 
 	{
@@ -188,23 +241,27 @@ int main(int argc, char *argv[])
 	}
 
 
-	//////////////////////////////////////////////////////////////////////
+	///////////////////////////////////////////////////////////////////////////
 
 
-	printf("\n");
 	printf("[mqtt] Sending PUBLISH message\n");
-	printf("\n");
 
 	PublishMessage publish_message;
-	publish_message.header = mqtt_build_fixed_header(PUBLISH, 0, 1, 0, 0);
+	char message_to_publish[] = "hello world :)";
+	publish_message = mqtt_build_publish_message("abc", 10, 
+						message_to_publish, strlen(message_to_publish));
+	len = mqtt_pack_publish_message(publish_message, buffer);
 
-	dump_parsed_fixed_header(publish_message.header);
+	log_publish_message(publish_message);
 
+	dump(buffer, len);
 
-	// TODO
-	// mqtt_pack_connect_message(connect_message, buffer);
-	// tcp_send(buffer, len);
-	// tcp_receive(buffer, &len);
+	tcp_send(buffer, len);
+	tcp_receive(buffer, &len);
+
+	printf("[mqtt] PUBLISH response\n");
+	dump(buffer, len);
+	
 
     return 0;
 }

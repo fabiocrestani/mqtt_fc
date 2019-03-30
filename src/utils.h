@@ -10,5 +10,7 @@
 #define GET_LSB(x) (x & 0xFF)
 #define PACK_MSB_LSB(x, y) (((x & 0xFF) << 8) | (y & 0xFF))
 
+#define LIMITER(x, y) ((x <= y) ? x : y)
+
 
 #endif // __UTILS_H__
