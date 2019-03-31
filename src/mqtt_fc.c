@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
+#include <stdint.h>
 
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -14,6 +15,7 @@
 #include <netdb.h>
 
 #include "mqtt_fc.h"
+#include "mqtt_fc_send_receive.h"
 #include "tcp.h"
 #include "logger.h"
 #include "utils.h"
@@ -265,11 +267,9 @@ int main(int argc, char *argv[])
 	///////////////////////////////////////////////////////////////////////////
 	printf("\n[mqtt] Sending CONNECT message\n");
 	ConnectMessage connect_message = mqtt_build_connect_message("MQTT", "fabio");
-	len = mqtt_pack_connect_message(connect_message, buffer);
+	mqtt_send((void *) &connect_message);
 
-	log_connect_message(connect_message);
-
-	tcp_send(buffer, len);
+	
 	tcp_receive(buffer, &len);
 
 	printf("[mqtt] CONNACK response\n");

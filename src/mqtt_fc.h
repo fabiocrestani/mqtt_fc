@@ -6,6 +6,11 @@
 #ifndef __MQTT_H__
 #define __MQTT_H__
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <string.h>
+
 #define TRUE (1)
 #define FALSE (0)
 
@@ -40,7 +45,8 @@ typedef enum MessageType_ {
 	UNSUBACK = 0xB,
 	PINGREQ = 0xC,
 	PINGRESP = 0xD,
-	DISCONNECT = 0xE
+	DISCONNECT = 0xE,
+	MESSAGE_TYPE_COUNT
 } MessageType;
 
 typedef enum EQosLevel_ {

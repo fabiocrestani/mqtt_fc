@@ -32,4 +32,9 @@ void log_connack_message(ConnackMessage connack_message);
 void log_publish_message(PublishMessage message);
 void log_puback_message(PubAckMessage puback_message);
 
+// Translators
+const char * translate_message_type(MessageType message_type);
+const char * translate_connack_return_code(EConnakReturnCode return_code);
+const char * translate_qos_level(EQosLevel qos_level);
+
 #endif // __LOGGER_H__

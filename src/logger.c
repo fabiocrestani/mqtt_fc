@@ -15,10 +15,6 @@
 
 void logger_print_separator(void);
 
-const char * translate_message_type(MessageType message_type);
-const char * translate_connack_return_code(EConnakReturnCode return_code);
-const char * translate_qos_level(EQosLevel qos_level);
-
 void dump(char *data, uint32_t len)
 {
 #if LOG_DUMP == TRUE
