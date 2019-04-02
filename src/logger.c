@@ -43,7 +43,7 @@ void dump(char *data, uint32_t len)
 			printf("\t");
 			for (uint32_t j = 0; j < temp_idx; j++)
 			{
-				if ((temp[j] > 33) && (temp[j] < 127))
+				if (((temp[j] > 33) && (temp[j] < 127)) || (temp[j] == ' '))
 				{
 					printf("%c", temp[j]);
 				}

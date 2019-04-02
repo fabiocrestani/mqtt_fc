@@ -1,5 +1,5 @@
-	/*
- * main.c
+/*
+ * mqtt_fc.c
  * Author: Fabio Crestani
  */
 
@@ -209,7 +209,19 @@ uint32_t mqtt_pack_puback_message(PubAckMessage message, char *buffer)
 ///////////////////////////////////////////////////////////////////////////////
 // Unpack message from a buffer
 ///////////////////////////////////////////////////////////////////////////////
+uint8_t mqtt_unpack_fixed_header(char buffer[], uint32_t len, 
+								 FixedHeader *header)
+{
+	if (len < 2)
+	{
+		return FALSE;
+	}
 
+	header->byte1 = buffer[0];
+	header->byte2 = buffer[1];
+	
+	return TRUE;
+}
 uint8_t mqtt_unpack_connack_message(char buffer[], uint32_t len,
 								    ConnackMessage *connack_message)
 {
@@ -242,74 +254,41 @@ uint8_t mqtt_unpack_puback_message(char buffer[], uint32_t len,
 	return TRUE;
 }
 
-
-
-
-
-int main(int argc, char *argv[])
+///////////////////////////////////////////////////////////////////////////////
+// Command handlers
+///////////////////////////////////////////////////////////////////////////////
+uint8_t	mqtt_connect(char mqtt_protocol_name[], char mqtt_client_id[])
 {
-    char buffer[1024];
-	unsigned int len = 18;
-
-	printf("\n");
-
-	if (tcp_connect())
-	{
-		printf("[tcp] TCP connected to %s:%d\n", "iot.eclipse.org", 1883);
-	}
-	else
-	{
-		printf("[tcp] Error connecting to %s:%d\n", "iot.eclipse.org", 1883);
-	}
-
-	///////////////////////////////////////////////////////////////////////////
-	// Connect
-	///////////////////////////////////////////////////////////////////////////
-	printf("\n[mqtt] Sending CONNECT message\n");
-	ConnectMessage connect_message = mqtt_build_connect_message("MQTT", "fabio");
+	ConnectMessage connect_message = 
+			mqtt_build_connect_message(mqtt_protocol_name, mqtt_client_id);
 	mqtt_send((void *) &connect_message);
+	mqtt_receive_response();
+	return TRUE;
 
-	
-	tcp_receive(buffer, &len);
-
-	printf("[mqtt] CONNACK response\n");
-
-	ConnackMessage connack_message;
-	if (mqtt_unpack_connack_message(buffer, len, &connack_message))
-	{
-		log_connack_message(connack_message);
-	}
-	else 
-	{
-		printf("[mqtt] Error parsing CONNACK message\n");
-	}
-
-	///////////////////////////////////////////////////////////////////////////
-	// Publish
-	///////////////////////////////////////////////////////////////////////////
-	printf("[mqtt] Sending PUBLISH message\n");
-
-	PublishMessage publish_message;
-	char message_to_publish[] = "hello world :)";
-	publish_message = mqtt_build_publish_message("abc", 10, 
-						message_to_publish, strlen(message_to_publish));
-	len = mqtt_pack_publish_message(publish_message, buffer);
-
-	log_publish_message(publish_message);
-
-	tcp_send(buffer, len);
-	tcp_receive(buffer, &len);
-
-	printf("[mqtt] PUBLISH response: PUBACK\n");
-	PubAckMessage puback_message;
-	if (mqtt_unpack_puback_message(buffer, len, &puback_message))
-	{
-		log_puback_message(puback_message);
-	}
-	
-
-    return 0;
 }
+
+uint8_t mqtt_publish(char topic_to_publish[], char message_to_publish[], 
+					 uint16_t message_id)
+{
+	PublishMessage publish_message;
+	publish_message = mqtt_build_publish_message(topic_to_publish, message_id,
+						message_to_publish, strlen(message_to_publish));
+	mqtt_send((void *) &publish_message);
+	mqtt_receive_response();
+
+	return TRUE;
+}
+
+
+
+///////////////////////////////////////////////////////////////////////////////
+// Response handlers
+///////////////////////////////////////////////////////////////////////////////
+
+
+
+
+
 
 
 

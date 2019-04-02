@@ -22,23 +22,29 @@ uint8_t mqtt_send(void * message)
 	uint32_t len = 0;
 	char buffer[1024];
 
-	ConnectMessage *m;
+	ConnectMessage *connect_message;
+	PublishMessage *publish_message;
 
 	if ((type > 0) && (type < MESSAGE_TYPE_COUNT))
 	{
-		printf("type ok %d\n", type);
-
 		switch (type)
 		{
 			case CONNECT:
-				m = (ConnectMessage *) message;
-				len = mqtt_pack_connect_message(*m, buffer);
-				log_connect_message(*m);
+				connect_message = (ConnectMessage *) message;
+				len = mqtt_pack_connect_message(*connect_message, buffer);
+				log_connect_message(*connect_message);
 				tcp_send(buffer, len);
-			break;
+			return TRUE;
+
+			
+			case PUBLISH:
+				publish_message = (PublishMessage *) message;
+				len = mqtt_pack_publish_message(*publish_message, buffer);
+				log_publish_message(*publish_message);
+				tcp_send(buffer, len);
+			return TRUE;	
 
 			case CONNACK:
-			case PUBLISH:
 			case PUBACK:
 			case PBUREC:
 			case PUBREL:
@@ -54,10 +60,99 @@ uint8_t mqtt_send(void * message)
 						type, translate_message_type(type));
 			return FALSE;
 		}
-
-		return TRUE;
 	}
 
 	printf("[mqtt_send] Error: Invalid message type (%d)\n", type);
 	return FALSE;
 }
+
+uint8_t mqtt_receive_response(void)
+{
+	char buffer[1024];
+	unsigned int len = 18;
+
+	tcp_receive(buffer, &len);
+	mqtt_handle_received_message(buffer, len);
+
+	return TRUE;
+}
+
+uint8_t mqtt_handle_received_message(char *buffer, uint32_t len)
+{
+	FixedHeader header;
+	if (mqtt_unpack_fixed_header(buffer, len, &header))
+	{
+		uint8_t type = header.message_type;
+		switch (type)
+		{
+			case CONNACK:
+				return mqtt_handle_received_connack(buffer, len);
+
+			case PUBACK:
+				return mqtt_handle_received_puback(buffer, len);
+				
+			case CONNECT:
+			case PUBLISH:
+			case PBUREC:
+			case PUBREL:
+			case PUBCOMP:
+			case SUBSCRIBE:
+			case SUBACK:
+			case UNSUBSCRIBE:
+			case UNSUBACK:
+			case PINGREQ:
+			case PINGRESP:
+			default:
+			printf("Cannot handle message type (%d) %s\n",
+						type, translate_message_type(type));
+			return FALSE;
+		
+		}
+	
+	}
+	else
+	{
+		return FALSE;
+	}
+}
+
+uint8_t mqtt_handle_received_connack(char *buffer, uint32_t len)
+{
+	printf("[mqtt] CONNACK response\n");
+	ConnackMessage connack_message;
+	if (mqtt_unpack_connack_message(buffer, len, &connack_message))
+	{
+		log_connack_message(connack_message);
+		return TRUE;
+	}
+	else 
+	{
+		printf("[mqtt] Error parsing CONNACK message\n");
+		return FALSE;
+	}
+}
+
+uint8_t mqtt_handle_received_puback(char *buffer, uint32_t len)
+{
+	printf("[mqtt] PUBLISH response: PUBACK\n");
+	PubAckMessage puback_message;
+	if (mqtt_unpack_puback_message(buffer, len, &puback_message))
+	{
+		log_puback_message(puback_message);
+		return TRUE;
+	}
+	else 
+	{
+		printf("[mqtt] Error parsing PUBACK message\n");
+		return FALSE;
+	}
+}
+
+
+
+
+
+
+
+
+
