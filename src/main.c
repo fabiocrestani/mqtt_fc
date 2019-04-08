@@ -19,6 +19,7 @@
 #include "tcp.h"
 #include "logger.h"
 #include "utils.h"
+#include "timer.h"
 
 int main(int argc, char *argv[])
 {
@@ -45,6 +46,23 @@ int main(int argc, char *argv[])
 	char mqtt_client_id[] = "fabio";
 
 	mqtt_connect(mqtt_protocol_name, mqtt_client_id);
+
+
+	///////////////////////////////////////////////////////////////////////////
+	// Start main timer for FSM
+	///////////////////////////////////////////////////////////////////////////
+	Timer timer_mqtt_fsm;
+	timer_init(&timer_mqtt_fsm, 1000*1000, 3);
+	timer_start(&timer_mqtt_fsm);
+
+	while (1)
+	{
+		if (timer_reached(&timer_mqtt_fsm))
+		{
+			printf("timer_reached\n");
+		}
+		usleep(1000*500);
+	}	
 
 	///////////////////////////////////////////////////////////////////////////
 	// Publish

@@ -1,6 +1,6 @@
 CC=gcc
-CFLAGS=-I. -Wall -Wextra
-OBJ = main.o mqtt_fc.o tcp.o logger.o  mqtt_fc_send_receive.o
+CFLAGS=-I. -Wall -Wextra -lpthread
+OBJ = main.o mqtt_fc.o tcp.o logger.o  mqtt_fc_send_receive.o timer.o fsm.o
 
 RM := rm -rf
 
