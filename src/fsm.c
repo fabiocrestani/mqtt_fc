@@ -9,19 +9,24 @@
 #include <string.h>
 #include <stdint.h>
 
-typedef struct FsmState_ {
+#include "fsm.h"
 
-} FsmState;
-
-typedef struct Fsm_ {
-
-	FsmState state;
-
-} Fsm;
-
-
-uint8_t fsm_init(FsmState initial_state)
+uint8_t fsm_init(Fsm *mqtt_fsm)
 {
 
 
 }
+
+FsmState fsm_state_build(char *state_name, void callback(void))
+{
+	FsmState state;
+	strcpy(state.state_name, state_name);
+	state.callback = callback;
+	return state;
+}
+
+void fsm_poll(Fsm *mqtt_fsm)
+{
+	printf("fsm_poll\n");
+}
+

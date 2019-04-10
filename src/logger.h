@@ -31,6 +31,8 @@ void log_connect_message(ConnectMessage connect_message);
 void log_connack_message(ConnackMessage connack_message);
 void log_publish_message(PublishMessage message);
 void log_puback_message(PubAckMessage puback_message);
+void log_pingreq_message(PingReqMessage pingreq_message);
+void log_pingresp_message(PingRespMessage pingresp_message);
 
 // Translators
 const char * translate_message_type(MessageType message_type);

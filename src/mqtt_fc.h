@@ -28,6 +28,8 @@
 
 #define PUBACK_MESSAGE_SIZE (4)
 
+#define PINGRESP_MESSAGE_SIZE (2)
+
 ///////////////////////////////////////////////////////////////////////////////
 // ENUMS
 ///////////////////////////////////////////////////////////////////////////////
@@ -196,6 +198,20 @@ typedef struct PubAckMessage_ {
 
 } PubAckMessage;
 
+// The PINGREQ message is an "are you alive?" message that is sent from a 
+// connected client to the server
+typedef struct PingReqMessage_ {
+	FixedHeader header;
+
+} PingReqMessage;
+
+// A PINGRESP message is the response sent by a server to a PINGREQ message and
+// means "yes I am alive".
+typedef struct PingRespMessage_ {
+	FixedHeader header;
+
+} PingRespMessage;
+
 ///////////////////////////////////////////////////////////////////////////////
 // FUNCTIONS
 ///////////////////////////////////////////////////////////////////////////////
@@ -215,6 +231,8 @@ PublishMessage mqtt_build_publish_message(char topic_name[], uint16_t id,
 uint32_t mqtt_pack_publish_message(PublishMessage message, char *buffer);
 uint32_t mqtt_pack_connect_message(ConnectMessage message, char *buffer);
 uint32_t mqtt_pack_puback_message(PubAckMessage message, char *buffer);
+uint32_t mqtt_pack_pingreq_message(PingReqMessage message, char *buffer);
+uint32_t mqtt_pack_pingresp_message(PingRespMessage message, char *buffer);
 
 // Message unpackers
 uint8_t mqtt_unpack_fixed_header(char buffer[], uint32_t len, 
@@ -228,5 +246,11 @@ uint8_t mqtt_unpack_puback_message(char buffer[], uint32_t len,
 uint8_t	mqtt_connect(char mqtt_protocol_name[], char mqtt_client_id[]);
 uint8_t mqtt_publish(char topic_to_publish[], char message_to_publish[], 
 					 uint16_t message_id);
+uint8_t mqtt_ping_request();
+
+// Response handlers
+uint8_t mqtt_handle_received_connack(char *buffer, uint32_t len);
+uint8_t mqtt_handle_received_puback(char *buffer, uint32_t len);
+uint8_t mqtt_handle_received_pingresp(char *buffer, uint32_t len);
 
 #endif // __MQTT_H__

@@ -27,6 +27,7 @@ typedef struct Timer_
 
 uint8_t timer_init(Timer *timer, uint32_t period_us, uint32_t counter_max);
 uint8_t timer_start(Timer *timer);
+uint8_t timer_reached(Timer *timer);
 
 #endif // __TIMER_H__
 

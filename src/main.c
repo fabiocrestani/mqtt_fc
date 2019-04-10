@@ -20,6 +20,27 @@
 #include "logger.h"
 #include "utils.h"
 #include "timer.h"
+#include "fsm.h"
+
+/*uint8_t callback_tcp_connect(void)
+{
+	char mqtt_tcp_server_address[] = "iot.eclipse.org";
+	uint32_t mqtt_tcp_server_port_number = 1883;
+
+	if (!tcp_connect())
+	{
+		printf("[tcp] Error connecting to %s:%d\n", mqtt_tcp_server_address,
+												mqtt_tcp_server_port_number);
+		return FALSE;
+	
+	}
+
+	printf("[tcp] TCP connected to %s:%d\n", mqtt_tcp_server_address,
+												 mqtt_tcp_server_port_number);
+	return TRUE;
+}*/
+
+
 
 int main(int argc, char *argv[])
 {
@@ -38,6 +59,8 @@ int main(int argc, char *argv[])
 
 	printf("[tcp] TCP connected to %s:%d\n", mqtt_tcp_server_address,
 												 mqtt_tcp_server_port_number);
+	
+
 	///////////////////////////////////////////////////////////////////////////
 	// Connect
 	///////////////////////////////////////////////////////////////////////////
@@ -51,6 +74,11 @@ int main(int argc, char *argv[])
 	///////////////////////////////////////////////////////////////////////////
 	// Start main timer for FSM
 	///////////////////////////////////////////////////////////////////////////
+	/*Fsm mqtt_fsm;
+	fsm_init(&mqtt_fsm);
+	FsmState state_tcp_connect; 
+	state_tcp_connect = fsm_state_build("tcp connect", *callback_tcp_connect);
+	
 	Timer timer_mqtt_fsm;
 	timer_init(&timer_mqtt_fsm, 1000*1000, 3);
 	timer_start(&timer_mqtt_fsm);
@@ -59,10 +87,10 @@ int main(int argc, char *argv[])
 	{
 		if (timer_reached(&timer_mqtt_fsm))
 		{
-			printf("timer_reached\n");
+			fsm_poll(&mqtt_fsm);
 		}
 		usleep(1000*500);
-	}	
+	}	*/
 
 	///////////////////////////////////////////////////////////////////////////
 	// Publish
@@ -73,6 +101,10 @@ int main(int argc, char *argv[])
 	uint16_t message_id = 10;
 
 	mqtt_publish(topic_to_publish, message_to_publish, message_id);
+
+
+	printf("Sending PingRequest message\n");
+	mqtt_ping_request();
 	
     return 0;
 }

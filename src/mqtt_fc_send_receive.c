@@ -24,6 +24,7 @@ uint8_t mqtt_send(void * message)
 
 	ConnectMessage *connect_message;
 	PublishMessage *publish_message;
+	PingReqMessage *pingreq_message;
 
 	if ((type > 0) && (type < MESSAGE_TYPE_COUNT))
 	{
@@ -42,7 +43,15 @@ uint8_t mqtt_send(void * message)
 				len = mqtt_pack_publish_message(*publish_message, buffer);
 				log_publish_message(*publish_message);
 				tcp_send(buffer, len);
-			return TRUE;	
+			return TRUE;
+
+			case PINGREQ:
+				pingreq_message = (PingReqMessage *) message;
+				len = mqtt_pack_pingreq_message(*pingreq_message, 
+														buffer);
+				log_pingreq_message(*pingreq_message);
+				tcp_send(buffer, len);
+			return TRUE;
 
 			case CONNACK:
 			case PUBACK:
@@ -53,7 +62,6 @@ uint8_t mqtt_send(void * message)
 			case SUBACK:
 			case UNSUBSCRIBE:
 			case UNSUBACK:
-			case PINGREQ:
 			case PINGRESP:
 			default:
 			printf("Cannot send message type (%d) %s\n",
@@ -90,6 +98,9 @@ uint8_t mqtt_handle_received_message(char *buffer, uint32_t len)
 
 			case PUBACK:
 				return mqtt_handle_received_puback(buffer, len);
+
+			case PINGRESP:
+				return mqtt_handle_received_pingresp(buffer, len);
 				
 			case CONNECT:
 			case PUBLISH:
@@ -101,7 +112,6 @@ uint8_t mqtt_handle_received_message(char *buffer, uint32_t len)
 			case UNSUBSCRIBE:
 			case UNSUBACK:
 			case PINGREQ:
-			case PINGRESP:
 			default:
 			printf("Cannot handle message type (%d) %s\n",
 						type, translate_message_type(type));
@@ -116,37 +126,7 @@ uint8_t mqtt_handle_received_message(char *buffer, uint32_t len)
 	}
 }
 
-uint8_t mqtt_handle_received_connack(char *buffer, uint32_t len)
-{
-	printf("[mqtt] CONNACK response\n");
-	ConnackMessage connack_message;
-	if (mqtt_unpack_connack_message(buffer, len, &connack_message))
-	{
-		log_connack_message(connack_message);
-		return TRUE;
-	}
-	else 
-	{
-		printf("[mqtt] Error parsing CONNACK message\n");
-		return FALSE;
-	}
-}
 
-uint8_t mqtt_handle_received_puback(char *buffer, uint32_t len)
-{
-	printf("[mqtt] PUBLISH response: PUBACK\n");
-	PubAckMessage puback_message;
-	if (mqtt_unpack_puback_message(buffer, len, &puback_message))
-	{
-		log_puback_message(puback_message);
-		return TRUE;
-	}
-	else 
-	{
-		printf("[mqtt] Error parsing PUBACK message\n");
-		return FALSE;
-	}
-}
 
 
 

@@ -126,6 +126,13 @@ PublishMessage mqtt_build_publish_message(char topic_name[], uint16_t id,
 	return m;
 }
 
+PingReqMessage mqtt_build_ping_message()
+{
+	PingReqMessage m;
+	m.header = mqtt_build_fixed_header(PINGREQ, 0, 0, 0, 0);
+	return m;
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // Pack message to a buffer
 ///////////////////////////////////////////////////////////////////////////////
@@ -206,6 +213,17 @@ uint32_t mqtt_pack_puback_message(PubAckMessage message, char *buffer)
 	return len;
 }
 
+uint32_t mqtt_pack_pingreq_message(PingReqMessage message, 
+											char *buffer)
+{
+	uint32_t len = 0;
+
+	buffer[len++] = message.header.byte1;
+	buffer[len++] = message.header.byte2;
+
+	return len;
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // Unpack message from a buffer
 ///////////////////////////////////////////////////////////////////////////////
@@ -254,9 +272,27 @@ uint8_t mqtt_unpack_puback_message(char buffer[], uint32_t len,
 	return TRUE;
 }
 
+uint8_t mqtt_unpack_pingresp_message(char buffer[], uint32_t len, 
+										PingRespMessage *pingresp_message)
+{
+
+	if (len != PINGRESP_MESSAGE_SIZE)
+	{
+		return FALSE;
+	}
+
+	pingresp_message->header.byte1 = buffer[0];
+	pingresp_message->header.byte2 = buffer[1];
+
+	return TRUE;
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // Command handlers
 ///////////////////////////////////////////////////////////////////////////////
+
+// When a TCP/IP socket connection is established from a client to a server, a 
+// protocol level session must be created using a CONNECT flow.
 uint8_t	mqtt_connect(char mqtt_protocol_name[], char mqtt_client_id[])
 {
 	ConnectMessage connect_message = 
@@ -267,6 +303,14 @@ uint8_t	mqtt_connect(char mqtt_protocol_name[], char mqtt_client_id[])
 
 }
 
+// A PUBLISH message is sent by a client to a server for distribution to 
+// interested subscribers. Each PUBLISH message is associated with a topic name
+// (also known as the Subject or Channel). This is a hierarchical name space 
+// that defines a taxonomy of information sources for which subscribers can 
+// register an interest. A message that is published to a specific topic name 
+// is delivered to connected subscribers for that topic. If a client subscribes 
+// to one or more topics, any message published to those topics are sent by the
+// server to the client as a PUBLISH message.
 uint8_t mqtt_publish(char topic_to_publish[], char message_to_publish[], 
 					 uint16_t message_id)
 {
@@ -279,16 +323,76 @@ uint8_t mqtt_publish(char topic_to_publish[], char message_to_publish[],
 	return TRUE;
 }
 
+// The PINGREQ message is an "are you alive?" message that is sent from a 
+// connected client to the server
+uint8_t mqtt_ping_request()
+{
+	PingReqMessage ping_message;
+	ping_message = mqtt_build_ping_message();
+	mqtt_send((void *) &ping_message);
+	mqtt_receive_response();
+	
+	return TRUE;
+}
 
 
 ///////////////////////////////////////////////////////////////////////////////
 // Response handlers
 ///////////////////////////////////////////////////////////////////////////////
 
+// The CONNACK message is the message sent by the server in response to a 
+// CONNECT request from a client.
+uint8_t mqtt_handle_received_connack(char *buffer, uint32_t len)
+{
+	printf("[mqtt] CONNACK response\n");
+	ConnackMessage connack_message;
+	if (mqtt_unpack_connack_message(buffer, len, &connack_message))
+	{
+		log_connack_message(connack_message);
+		return TRUE;
+	}
+	else 
+	{
+		printf("[mqtt] Error parsing CONNACK message\n");
+		return FALSE;
+	}
+}
 
+// A PUBACK message is the response to a PUBLISH message with QoS level 1. 
+// A PUBACK message is sent by a server in response to a PUBLISH message from a 
+// publishing client, and by a subscriber in response to a PUBLISH message from
+// the server.
+uint8_t mqtt_handle_received_puback(char *buffer, uint32_t len)
+{
+	printf("[mqtt] PUBLISH response: PUBACK\n");
+	PubAckMessage puback_message;
+	if (mqtt_unpack_puback_message(buffer, len, &puback_message))
+	{
+		log_puback_message(puback_message);
+		return TRUE;
+	}
+	else 
+	{
+		printf("[mqtt] Error parsing PUBACK message\n");
+		return FALSE;
+	}
+}
 
-
-
-
-
+// A PINGRESP message is the response sent by a server to a PINGREQ message and
+// means "yes I am alive".
+uint8_t mqtt_handle_received_pingresp(char *buffer, uint32_t len)
+{
+	printf("[mqtt] PINGREQ response: PINGRESP\n");
+	PingRespMessage message;
+	if (mqtt_unpack_pingresp_message(buffer, len, &message))
+	{
+		log_pingresp_message(message);
+		return TRUE;
+	}
+	else 
+	{
+		printf("[mqtt] Error parsing PINGRESP message\n");
+		return FALSE;
+	}
+}
 

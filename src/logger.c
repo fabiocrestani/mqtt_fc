@@ -128,6 +128,21 @@ void dump_parsed_puback_message(PubAckMessage puback_message)
 	printf("{Message ID: %d}\n", puback_message.message_id);
 }
 
+void dump_parsed_pingreq_message(PingReqMessage message)
+{
+	printf("PINGREQ message: ");
+	printf("{Message Type: %s}\n", 
+		translate_message_type(message.header.message_type));
+}
+
+void dump_parsed_pingresp_message(PingRespMessage message)
+{
+	printf("PINGRESP message: ");
+	printf("{Message Type: %s}\n", 
+		translate_message_type(message.header.message_type));
+}
+
+
 void dump_connect_message(ConnectMessage message)
 {
 #if LOG_DUMP_CONNECT == TRUE
@@ -164,6 +179,17 @@ void dump_puback_message(PubAckMessage message)
 #endif
 }
 
+void dump_pingreq_message(PingReqMessage message)
+{
+#if LOG_DUMP_PUBACK == TRUE
+	char buffer[64];
+	uint32_t len = 0;
+	len = mqtt_pack_pingreq_message(message, buffer);
+	dump(buffer, len);
+#else
+	(void) message;
+#endif
+}
 
 void log_connect_message(ConnectMessage connect_message)
 {
@@ -200,6 +226,24 @@ void log_puback_message(PubAckMessage puback_message)
 	dump_parsed_fixed_header(puback_message.header);
 	dump_parsed_puback_message(puback_message);
 	dump_puback_message(puback_message);
+	logger_print_separator();
+	printf("\n");
+}
+
+void log_pingreq_message(PingReqMessage pingreq_message)
+{
+	logger_print_separator();
+	dump_parsed_fixed_header(pingreq_message.header);
+	dump_parsed_pingreq_message(pingreq_message);
+	logger_print_separator();
+	printf("\n");
+}
+
+void log_pingresp_message(PingRespMessage pingresp_message)
+{
+	logger_print_separator();
+	dump_parsed_fixed_header(pingresp_message.header);
+	dump_parsed_pingresp_message(pingresp_message);
 	logger_print_separator();
 	printf("\n");
 }
