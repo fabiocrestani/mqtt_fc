@@ -238,6 +238,8 @@ typedef struct SubscribeMessage_ {
 
 	uint8_t topic_name[MQTT_TOPIC_NAME_MAX_LEN];
 
+	uint8_t requested_qos;
+
 } SubscribeMessage;
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -275,7 +277,7 @@ uint8_t mqtt_unpack_puback_message(char buffer[], uint32_t len,
 uint8_t	mqtt_connect(char mqtt_protocol_name[], char mqtt_client_id[]);
 uint8_t mqtt_publish(char topic_to_publish[], char message_to_publish[]);
 uint8_t mqtt_ping_request(void);
-uint8_t mqtt_subscribe(char topic_to_subscribe[]);
+uint8_t mqtt_subscribe(char topic_to_subscribe[], uint8_t requested_qos);
 
 // Response handlers
 uint8_t mqtt_handle_received_connack(char *buffer, uint32_t len);

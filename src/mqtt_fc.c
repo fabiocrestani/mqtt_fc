@@ -133,7 +133,8 @@ PublishMessage mqtt_build_publish_message(char topic_name[], uint16_t id,
 	return m;
 }
 
-SubscribeMessage mqtt_build_subscribe_message(char topic_name[], uint16_t id)
+SubscribeMessage mqtt_build_subscribe_message(char topic_name[], uint16_t id,
+												uint8_t requested_qos)
 {
 	SubscribeMessage m;
 
@@ -148,7 +149,8 @@ SubscribeMessage mqtt_build_subscribe_message(char topic_name[], uint16_t id)
 	}
 
 	m.message_id = id;
-	m.header = mqtt_build_fixed_header(SUBSCRIBE, 0, 1, 0, topic_name_len + 4);
+	m.requested_qos = requested_qos;
+	m.header = mqtt_build_fixed_header(SUBSCRIBE, 0, 1, 0, topic_name_len + 5);
 
 	return m;
 }
@@ -247,6 +249,8 @@ uint32_t mqtt_pack_subscribe_message(SubscribeMessage message, char *buffer)
 	{
 		buffer[len++] = message.topic_name[i];
 	}
+
+	buffer[len++] = message.requested_qos;
 
 	return len;
 }
@@ -386,11 +390,11 @@ uint8_t mqtt_ping_request(void)
 // from the server to the client as PUBLISH messages. The SUBSCRIBE message also
 // specifies the QoS level at which the subscriber wants to receive published
 // messages.
-uint8_t mqtt_subscribe(char topic_to_subscribe[])
+uint8_t mqtt_subscribe(char topic_to_subscribe[], uint8_t requested_qos)
 {
 	SubscribeMessage subscribe_message;
 	subscribe_message = mqtt_build_subscribe_message(topic_to_subscribe,
-							mqtt_get_new_message_id());
+							mqtt_get_new_message_id(), requested_qos);
 	mqtt_send((void *) &subscribe_message);
 	mqtt_receive_response();
 	return TRUE;

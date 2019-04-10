@@ -115,8 +115,8 @@ int main(int argc, char *argv[])
 	// Subscribe
 	///////////////////////////////////////////////////////////////////////////
 	logger_log("[mqtt] Sending SUBSCRIBE");
-	char topic_name[] = "topic_to_subscribe";	
-	mqtt_subscribe(topic_name);	
+	char topic_name[] = "abc";	
+	mqtt_subscribe(topic_name, 1);	
 
 
 

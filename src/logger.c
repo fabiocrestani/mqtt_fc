@@ -151,9 +151,9 @@ void dump_parsed_publish_message(PublishMessage publish_message)
 void dump_parsed_subscribe_message(SubscribeMessage subscribe_message)
 {
 	printf("SUBSCRIBE message: ");
-	printf("{Topic name: (%d) %s Message Identifier: %d}\n",
+	printf("{Topic name: (%d) %s Message Identifier: %d Requested QoS: %d}\n",
 			subscribe_message.topic_name_len, subscribe_message.topic_name, 
-			subscribe_message.message_id);
+			subscribe_message.message_id, subscribe_message.requested_qos);
 }
 
 void dump_parsed_puback_message(PubAckMessage puback_message)
@@ -211,7 +211,6 @@ void dump_subscribe_message(SubscribeMessage message)
 	(void) message;
 #endif
 }
-
 
 void dump_puback_message(PubAckMessage message)
 {

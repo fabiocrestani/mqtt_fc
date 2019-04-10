@@ -71,7 +71,7 @@ uint8_t mqtt_send(void * message)
 			case UNSUBACK:
 			case PINGRESP:
 			default:
-			printf("Cannot send message type (%d) %s\n",
+				printf("Cannot send message type (%d) %s\n",
 						type, translate_message_type(type));
 			return FALSE;
 		}
