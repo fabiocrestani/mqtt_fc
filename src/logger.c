@@ -8,6 +8,8 @@
 #include <unistd.h>
 #include <string.h>
 #include <stdint.h>
+#include <time.h>
+#include <sys/time.h>
 
 #include "mqtt_fc.h"
 #include "logger.h"
@@ -82,6 +84,30 @@ void dump(char *data, uint32_t len)
 #endif
 }
 
+void logger_print_timestamp(void)
+{
+	char buffer[256];
+	time_t t;
+	time(&t);
+	struct tm *tm = localtime(&t);
+	struct timeval tv;
+
+	gettimeofday(&tv, NULL);
+	uint32_t us = tv.tv_usec;
+
+	sprintf(buffer, "[%02d.%02d.%02d %02d:%02d:%02d:%06d]", 
+			tm->tm_mday, tm->tm_mon + 1, tm->tm_year + 1900, tm->tm_hour, 
+			tm->tm_min, tm->tm_sec, us);
+
+	printf("%s", buffer);
+}
+
+void logger_log(char buffer[])
+{
+	logger_print_timestamp();
+	printf(" %s\n", buffer);
+}
+
 void dump_parsed_fixed_header(FixedHeader header)
 {
 	printf("Fixed header:\n");
@@ -108,7 +134,7 @@ Client ID (%d): %s\n",
 
 void dump_parsed_connack_message(ConnackMessage connack_message)
 {
-	printf("CONNACK message:\n");
+	printf("CONNACK message: ");
 	printf("{Reserved: %d Return code: (%d) %s}\n",
 		connack_message.byte1, connack_message.return_code, 
 		translate_connack_return_code(connack_message.return_code));
@@ -181,7 +207,7 @@ void dump_puback_message(PubAckMessage message)
 
 void dump_pingreq_message(PingReqMessage message)
 {
-#if LOG_DUMP_PUBACK == TRUE
+#if LOG_DUMP_PINGREQ == TRUE
 	char buffer[64];
 	uint32_t len = 0;
 	len = mqtt_pack_pingreq_message(message, buffer);
@@ -193,59 +219,83 @@ void dump_pingreq_message(PingReqMessage message)
 
 void log_connect_message(ConnectMessage connect_message)
 {
+#if LOG_CONNECT == TRUE
 	logger_print_separator();
 	dump_connect_message(connect_message);
 	dump_parsed_fixed_header(connect_message.header);
 	dump_parsed_connect_message(connect_message);
 	logger_print_separator();
 	printf("\n");
+#else
+	(void) connect_message;
+#endif
 }
 
 void log_connack_message(ConnackMessage connack_message)
 {
+#if LOG_CONNACK == TRUE
 	logger_print_separator();
 	dump_parsed_fixed_header(connack_message.header);
 	dump_parsed_connack_message(connack_message);
 	logger_print_separator();
 	printf("\n");
+#else
+	(void) connack_message;
+#endif
 }
 
 void log_publish_message(PublishMessage publish_message)
 {
+#if LOG_PUBLISH == TRUE
 	logger_print_separator();
 	dump_parsed_fixed_header(publish_message.header);
 	dump_parsed_publish_message(publish_message);
 	dump_publish_message(publish_message);
 	logger_print_separator();
 	printf("\n");
+#else
+	(void) publish_message;
+#endif
 }
 
 void log_puback_message(PubAckMessage puback_message)
 {
+#if LOG_PUBACK == TRUE
 	logger_print_separator();
 	dump_parsed_fixed_header(puback_message.header);
 	dump_parsed_puback_message(puback_message);
 	dump_puback_message(puback_message);
 	logger_print_separator();
 	printf("\n");
+#else
+	(void) puback_message;
+#endif
 }
 
 void log_pingreq_message(PingReqMessage pingreq_message)
 {
+#if LOG_PINGREQ == TRUE
 	logger_print_separator();
 	dump_parsed_fixed_header(pingreq_message.header);
 	dump_parsed_pingreq_message(pingreq_message);
 	logger_print_separator();
 	printf("\n");
+#else
+	(void) pingreq_message;
+#endif
 }
 
 void log_pingresp_message(PingRespMessage pingresp_message)
 {
+#if LOG_PINGRESP == TRUE
 	logger_print_separator();
 	dump_parsed_fixed_header(pingresp_message.header);
 	dump_parsed_pingresp_message(pingresp_message);
 	logger_print_separator();
 	printf("\n");
+#else
+	(void) pingresp_message;
+#endif
 }
 
 void logger_print_separator(void)

@@ -300,7 +300,6 @@ uint8_t	mqtt_connect(char mqtt_protocol_name[], char mqtt_client_id[])
 	mqtt_send((void *) &connect_message);
 	mqtt_receive_response();
 	return TRUE;
-
 }
 
 // A PUBLISH message is sent by a client to a server for distribution to 
@@ -319,7 +318,6 @@ uint8_t mqtt_publish(char topic_to_publish[], char message_to_publish[],
 						message_to_publish, strlen(message_to_publish));
 	mqtt_send((void *) &publish_message);
 	mqtt_receive_response();
-
 	return TRUE;
 }
 
@@ -331,10 +329,8 @@ uint8_t mqtt_ping_request()
 	ping_message = mqtt_build_ping_message();
 	mqtt_send((void *) &ping_message);
 	mqtt_receive_response();
-	
 	return TRUE;
 }
-
 
 ///////////////////////////////////////////////////////////////////////////////
 // Response handlers
@@ -344,7 +340,7 @@ uint8_t mqtt_ping_request()
 // CONNECT request from a client.
 uint8_t mqtt_handle_received_connack(char *buffer, uint32_t len)
 {
-	printf("[mqtt] CONNACK response\n");
+	logger_log("[mqtt] CONNECT response received: CONNACK");
 	ConnackMessage connack_message;
 	if (mqtt_unpack_connack_message(buffer, len, &connack_message))
 	{
@@ -353,7 +349,7 @@ uint8_t mqtt_handle_received_connack(char *buffer, uint32_t len)
 	}
 	else 
 	{
-		printf("[mqtt] Error parsing CONNACK message\n");
+		logger_log("[mqtt] Error parsing CONNACK message");
 		return FALSE;
 	}
 }
@@ -364,7 +360,7 @@ uint8_t mqtt_handle_received_connack(char *buffer, uint32_t len)
 // the server.
 uint8_t mqtt_handle_received_puback(char *buffer, uint32_t len)
 {
-	printf("[mqtt] PUBLISH response: PUBACK\n");
+	logger_log("[mqtt] PUBLISH response received: PUBACK");
 	PubAckMessage puback_message;
 	if (mqtt_unpack_puback_message(buffer, len, &puback_message))
 	{
@@ -373,7 +369,7 @@ uint8_t mqtt_handle_received_puback(char *buffer, uint32_t len)
 	}
 	else 
 	{
-		printf("[mqtt] Error parsing PUBACK message\n");
+		logger_log("[mqtt] Error parsing PUBACK message");
 		return FALSE;
 	}
 }
@@ -382,7 +378,7 @@ uint8_t mqtt_handle_received_puback(char *buffer, uint32_t len)
 // means "yes I am alive".
 uint8_t mqtt_handle_received_pingresp(char *buffer, uint32_t len)
 {
-	printf("[mqtt] PINGREQ response: PINGRESP\n");
+	logger_log("[mqtt] PINGREQ response received: PINGRESP");
 	PingRespMessage message;
 	if (mqtt_unpack_pingresp_message(buffer, len, &message))
 	{
@@ -391,7 +387,7 @@ uint8_t mqtt_handle_received_pingresp(char *buffer, uint32_t len)
 	}
 	else 
 	{
-		printf("[mqtt] Error parsing PINGRESP message\n");
+		logger_log("[mqtt] Error parsing PINGRESP message");
 		return FALSE;
 	}
 }

@@ -11,10 +11,21 @@
 #include <unistd.h>
 #include <string.h>
 
+#define LOG_CONNECT (FALSE)
+#define LOG_CONNACK (FALSE)
+#define LOG_PUBLISH (FALSE)
+#define LOG_PUBACK (FALSE)
+#define LOG_PINGREQ (FALSE)
+#define LOG_PINGRESP (FALSE)
+
 #define LOG_DUMP (TRUE)
 #define LOG_DUMP_CONNECT (FALSE)
-#define LOG_DUMP_PUBLISH (TRUE)
-#define LOG_DUMP_PUBACK (TRUE)
+#define LOG_DUMP_PUBLISH (FALSE)
+#define LOG_DUMP_PUBACK (FALSE)
+#define LOG_DUMP_PINGREQ (FALSE)
+
+// Log
+void logger_log(char buffer[]);
 
 // Parsed data dump
 void dump_parsed_fixed_header(FixedHeader header);

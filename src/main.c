@@ -44,27 +44,31 @@
 
 int main(int argc, char *argv[])
 {
+	(void) argc;
+	(void) argv;
+
 	char mqtt_tcp_server_address[] = "iot.eclipse.org";
 	uint32_t mqtt_tcp_server_port_number = 1883;
+	char temp[512];
 
 	printf("\n");
 
 	if (!tcp_connect())
 	{
-		printf("[tcp] Error connecting to %s:%d\n", mqtt_tcp_server_address,
-												mqtt_tcp_server_port_number);
+		sprintf(temp, "[tcp] Error connecting to %s:%d", 
+						mqtt_tcp_server_address, mqtt_tcp_server_port_number);
+		logger_log(temp);
 		return FALSE;
-		
 	}
 
-	printf("[tcp] TCP connected to %s:%d\n", mqtt_tcp_server_address,
+	sprintf(temp, "[tcp] TCP connected to %s:%d", mqtt_tcp_server_address,
 												 mqtt_tcp_server_port_number);
-	
+	logger_log(temp);
 
 	///////////////////////////////////////////////////////////////////////////
 	// Connect
 	///////////////////////////////////////////////////////////////////////////
-	printf("\n[mqtt] Sending CONNECT message\n");
+	logger_log("[mqtt] Sending CONNECT message");
 	char mqtt_protocol_name[] = "MQTT";
 	char mqtt_client_id[] = "fabio";
 
@@ -95,7 +99,7 @@ int main(int argc, char *argv[])
 	///////////////////////////////////////////////////////////////////////////
 	// Publish
 	///////////////////////////////////////////////////////////////////////////
-	printf("[mqtt] Sending PUBLISH message\n");
+	logger_log("[mqtt] Sending PUBLISH message");
 	char topic_to_publish[] = "abc";
 	char message_to_publish[] = "hello world :)";
 	uint16_t message_id = 10;
@@ -103,9 +107,10 @@ int main(int argc, char *argv[])
 	mqtt_publish(topic_to_publish, message_to_publish, message_id);
 
 
-	printf("Sending PingRequest message\n");
+	logger_log("[mqtt] Sending PINGREQ message");
 	mqtt_ping_request();
 	
+
     return 0;
 }
 
