@@ -51,6 +51,12 @@ uint8_t tcp_connect()
 	return TRUE;
 }
 
+uint8_t tcp_disconnect()
+{
+	int ret = shutdown(sockfd, 2);
+	return (ret == 0);
+}
+
 uint8_t tcp_send(char buffer[], uint32_t len)
 {
 	int n;

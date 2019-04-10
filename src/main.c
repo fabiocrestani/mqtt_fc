@@ -110,9 +110,15 @@ int main(int argc, char *argv[])
 	logger_log("[mqtt] Sending PINGREQ message");
 	mqtt_ping_request();
 	
+	if (tcp_disconnect())
+	{
+		logger_log("[tcp] TCP disconnected");
+	}
+	else
+	{
+		logger_log("[tcp] Error on TCP disconnection");
+	}
 
     return 0;
 }
-
-
 
