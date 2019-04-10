@@ -20,16 +20,22 @@
 #include "logger.h"
 #include "utils.h"
 
+static uint16_t message_id_counter = 1;
+
 void error(char *msg)
 {
     perror(msg);
     exit(0);
 }
 
+uint16_t mqtt_get_new_message_id(void)
+{
+	return message_id_counter++;
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // Build message
 ///////////////////////////////////////////////////////////////////////////////
-
 FixedHeader mqtt_build_fixed_header(uint8_t message_type, uint8_t dup,
 	uint8_t qos, uint8_t retain, uint8_t remaining_length)
 {
@@ -39,6 +45,7 @@ FixedHeader mqtt_build_fixed_header(uint8_t message_type, uint8_t dup,
 	header.qos = qos;
 	header.retain = retain;
 	header.remaining_length = remaining_length;
+
 	return header;
 }
 
@@ -102,7 +109,7 @@ PublishMessage mqtt_build_publish_message(char topic_name[], uint16_t id,
 	PublishMessage m;
 
 	uint32_t topic_name_len = strlen(topic_name);
-	topic_name_len = LIMITER(topic_name_len, PUBLISH_TOPIC_NAME_MAX_LEN);
+	topic_name_len = LIMITER(topic_name_len, MQTT_TOPIC_NAME_MAX_LEN);
 
 	m.topic_name_len = topic_name_len;
 	
@@ -126,6 +133,26 @@ PublishMessage mqtt_build_publish_message(char topic_name[], uint16_t id,
 	return m;
 }
 
+SubscribeMessage mqtt_build_subscribe_message(char topic_name[], uint16_t id)
+{
+	SubscribeMessage m;
+
+	uint32_t topic_name_len = strlen(topic_name);
+	topic_name_len = LIMITER(topic_name_len, MQTT_TOPIC_NAME_MAX_LEN);
+
+	m.topic_name_len = topic_name_len;
+	
+	for (uint32_t i = 0; i < topic_name_len; i++)
+	{
+		m.topic_name[i] = topic_name[i];
+	}
+
+	m.message_id = id;
+	m.header = mqtt_build_fixed_header(SUBSCRIBE, 0, 1, 0, topic_name_len + 4);
+
+	return m;
+}
+
 PingReqMessage mqtt_build_ping_message()
 {
 	PingReqMessage m;
@@ -136,7 +163,6 @@ PingReqMessage mqtt_build_ping_message()
 ///////////////////////////////////////////////////////////////////////////////
 // Pack message to a buffer
 ///////////////////////////////////////////////////////////////////////////////
-
 uint32_t mqtt_pack_connect_message(ConnectMessage message, char *buffer)
 {
 	uint32_t len = 0;
@@ -178,7 +204,7 @@ uint32_t mqtt_pack_publish_message(PublishMessage message, char *buffer)
 	buffer[len++] = message.header.byte2;
 
 	uint32_t topic_name_len = message.topic_name_len;
-	topic_name_len = LIMITER(topic_name_len, PUBLISH_TOPIC_NAME_MAX_LEN);
+	topic_name_len = LIMITER(topic_name_len, MQTT_TOPIC_NAME_MAX_LEN);
 
 	buffer[len++] = message.topic_name_len_msb;
 	buffer[len++] = message.topic_name_len_lsb;
@@ -201,6 +227,30 @@ uint32_t mqtt_pack_publish_message(PublishMessage message, char *buffer)
 	return len;
 }
 
+uint32_t mqtt_pack_subscribe_message(SubscribeMessage message, char *buffer)
+{
+	uint32_t len = 0;
+
+	buffer[len++] = message.header.byte1;
+	buffer[len++] = message.header.byte2;
+
+	buffer[len++] = message.message_id_msb;
+	buffer[len++] = message.message_id_lsb;
+
+	uint32_t topic_name_len = message.topic_name_len;
+	topic_name_len = LIMITER(topic_name_len, MQTT_TOPIC_NAME_MAX_LEN);
+
+	buffer[len++] = message.topic_name_len_msb;
+	buffer[len++] = message.topic_name_len_lsb;
+
+	for (uint32_t i = 0; i < topic_name_len; i++)
+	{
+		buffer[len++] = message.topic_name[i];
+	}
+
+	return len;
+}
+
 uint32_t mqtt_pack_puback_message(PubAckMessage message, char *buffer)
 {
 	uint32_t len = 0;
@@ -213,8 +263,7 @@ uint32_t mqtt_pack_puback_message(PubAckMessage message, char *buffer)
 	return len;
 }
 
-uint32_t mqtt_pack_pingreq_message(PingReqMessage message, 
-											char *buffer)
+uint32_t mqtt_pack_pingreq_message(PingReqMessage message, char *buffer)
 {
 	uint32_t len = 0;
 
@@ -310,12 +359,12 @@ uint8_t	mqtt_connect(char mqtt_protocol_name[], char mqtt_client_id[])
 // is delivered to connected subscribers for that topic. If a client subscribes 
 // to one or more topics, any message published to those topics are sent by the
 // server to the client as a PUBLISH message.
-uint8_t mqtt_publish(char topic_to_publish[], char message_to_publish[], 
-					 uint16_t message_id)
+uint8_t mqtt_publish(char topic_to_publish[], char message_to_publish[])
 {
 	PublishMessage publish_message;
-	publish_message = mqtt_build_publish_message(topic_to_publish, message_id,
-						message_to_publish, strlen(message_to_publish));
+	publish_message = mqtt_build_publish_message(topic_to_publish, 
+						mqtt_get_new_message_id(), message_to_publish, 
+						strlen(message_to_publish));
 	mqtt_send((void *) &publish_message);
 	mqtt_receive_response();
 	return TRUE;
@@ -323,11 +372,26 @@ uint8_t mqtt_publish(char topic_to_publish[], char message_to_publish[],
 
 // The PINGREQ message is an "are you alive?" message that is sent from a 
 // connected client to the server
-uint8_t mqtt_ping_request()
+uint8_t mqtt_ping_request(void)
 {
 	PingReqMessage ping_message;
 	ping_message = mqtt_build_ping_message();
 	mqtt_send((void *) &ping_message);
+	mqtt_receive_response();
+	return TRUE;
+}
+
+// The SUBSCRIBE message allows a client to register an interest in one or more
+// topic names with the server. Messages published to these topics are delivered
+// from the server to the client as PUBLISH messages. The SUBSCRIBE message also
+// specifies the QoS level at which the subscriber wants to receive published
+// messages.
+uint8_t mqtt_subscribe(char topic_to_subscribe[])
+{
+	SubscribeMessage subscribe_message;
+	subscribe_message = mqtt_build_subscribe_message(topic_to_subscribe,
+							mqtt_get_new_message_id());
+	mqtt_send((void *) &subscribe_message);
 	mqtt_receive_response();
 	return TRUE;
 }

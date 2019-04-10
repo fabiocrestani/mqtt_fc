@@ -15,6 +15,7 @@
 #define FALSE (0)
 
 #define MQTT_VERSION (4)
+#define MQTT_TOPIC_NAME_MAX_LEN (255)
 
 #define KEEP_ALIVE_TIMER_VALUE (60)
 
@@ -23,7 +24,6 @@
 
 #define CONNACK_MESSAGE_SIZE (4)
 
-#define PUBLISH_TOPIC_NAME_MAX_LEN (255)
 #define PUBLISH_PAYLOAD_MAX_LEN (255)
 
 #define PUBACK_MESSAGE_SIZE (4)
@@ -76,7 +76,7 @@ typedef struct FixedHeader_ {
 			uint8_t retain : 1;
 			uint8_t qos : 2;
 			uint8_t dup : 1;
-			MessageType message_type : 4;
+			uint8_t message_type : 4;
 		};
 	};
 	
@@ -168,7 +168,7 @@ typedef struct PublishMessage_ {
 		};	
 	};
 
-	uint8_t topic_name[PUBLISH_TOPIC_NAME_MAX_LEN];
+	uint8_t topic_name[MQTT_TOPIC_NAME_MAX_LEN];
 
 	union {
 		uint16_t message_id;
@@ -212,6 +212,34 @@ typedef struct PingRespMessage_ {
 
 } PingRespMessage;
 
+// The SUBSCRIBE message allows a client to register an interest in one or more
+// topic names with the server. Messages published to these topics are delivered
+// from the server to the client as PUBLISH messages. The SUBSCRIBE message also
+// specifies the QoS level at which the subscriber wants to receive published
+// messages.
+typedef struct SubscribeMessage_ {
+	FixedHeader header;
+	
+	union {
+		uint16_t message_id;
+		struct {
+			uint8_t message_id_lsb;
+			uint8_t	message_id_msb;
+		};	
+	};	
+
+	union {
+		uint16_t topic_name_len;
+		struct {
+			uint8_t topic_name_len_lsb;
+			uint8_t topic_name_len_msb;
+		};	
+	};
+
+	uint8_t topic_name[MQTT_TOPIC_NAME_MAX_LEN];
+
+} SubscribeMessage;
+
 ///////////////////////////////////////////////////////////////////////////////
 // FUNCTIONS
 ///////////////////////////////////////////////////////////////////////////////
@@ -229,6 +257,7 @@ PublishMessage mqtt_build_publish_message(char topic_name[], uint16_t id,
 
 // Message packers
 uint32_t mqtt_pack_publish_message(PublishMessage message, char *buffer);
+uint32_t mqtt_pack_subscribe_message(SubscribeMessage message, char *buffer);
 uint32_t mqtt_pack_connect_message(ConnectMessage message, char *buffer);
 uint32_t mqtt_pack_puback_message(PubAckMessage message, char *buffer);
 uint32_t mqtt_pack_pingreq_message(PingReqMessage message, char *buffer);
@@ -244,9 +273,9 @@ uint8_t mqtt_unpack_puback_message(char buffer[], uint32_t len,
 
 // Commands
 uint8_t	mqtt_connect(char mqtt_protocol_name[], char mqtt_client_id[]);
-uint8_t mqtt_publish(char topic_to_publish[], char message_to_publish[], 
-					 uint16_t message_id);
-uint8_t mqtt_ping_request();
+uint8_t mqtt_publish(char topic_to_publish[], char message_to_publish[]);
+uint8_t mqtt_ping_request(void);
+uint8_t mqtt_subscribe(char topic_to_subscribe[]);
 
 // Response handlers
 uint8_t mqtt_handle_received_connack(char *buffer, uint32_t len);

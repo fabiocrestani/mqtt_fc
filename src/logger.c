@@ -36,7 +36,7 @@ void dump(char *data, uint32_t len)
 
 	for (uint32_t i = 0; i < len; i++)
 	{
-		printf("0x%02x ", data[i]);
+		printf("0x%02x ", data[i] & 0xff);
 
 		temp[temp_idx++] = data[i];
 	
@@ -148,6 +148,14 @@ void dump_parsed_publish_message(PublishMessage publish_message)
 			publish_message.message_id);
 }
 
+void dump_parsed_subscribe_message(SubscribeMessage subscribe_message)
+{
+	printf("SUBSCRIBE message: ");
+	printf("{Topic name: (%d) %s Message Identifier: %d}\n",
+			subscribe_message.topic_name_len, subscribe_message.topic_name, 
+			subscribe_message.message_id);
+}
+
 void dump_parsed_puback_message(PubAckMessage puback_message)
 {
 	printf("PUBACK message: ");
@@ -167,7 +175,6 @@ void dump_parsed_pingresp_message(PingRespMessage message)
 	printf("{Message Type: %s}\n", 
 		translate_message_type(message.header.message_type));
 }
-
 
 void dump_connect_message(ConnectMessage message)
 {
@@ -192,6 +199,19 @@ void dump_publish_message(PublishMessage message)
 	(void) message;
 #endif
 }
+
+void dump_subscribe_message(SubscribeMessage message)
+{
+#if LOG_DUMP_SUBSCRIBE == TRUE
+	char buffer[1024];
+	uint32_t len = 0;
+	len = mqtt_pack_subscribe_message(message, buffer);
+	dump(buffer, len);
+#else
+	(void) message;
+#endif
+}
+
 
 void dump_puback_message(PubAckMessage message)
 {
@@ -255,6 +275,20 @@ void log_publish_message(PublishMessage publish_message)
 	printf("\n");
 #else
 	(void) publish_message;
+#endif
+}
+
+void log_subscribe_message(SubscribeMessage subscribe_message)
+{
+#if LOG_SUBSCRIBE == TRUE
+	logger_print_separator();
+	dump_parsed_fixed_header(subscribe_message.header);
+	dump_parsed_subscribe_message(subscribe_message);
+	dump_subscribe_message(subscribe_message);
+	logger_print_separator();
+	printf("\n");
+#else
+	(void) subscribe_message;
 #endif
 }
 

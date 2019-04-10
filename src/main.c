@@ -102,22 +102,35 @@ int main(int argc, char *argv[])
 	logger_log("[mqtt] Sending PUBLISH message");
 	char topic_to_publish[] = "abc";
 	char message_to_publish[] = "hello world :)";
-	uint16_t message_id = 10;
 
-	mqtt_publish(topic_to_publish, message_to_publish, message_id);
+	mqtt_publish(topic_to_publish, message_to_publish);
 
-
+	///////////////////////////////////////////////////////////////////////////
+	// Ping
+	///////////////////////////////////////////////////////////////////////////
 	logger_log("[mqtt] Sending PINGREQ message");
 	mqtt_ping_request();
 	
-	if (tcp_disconnect())
-	{
-		logger_log("[tcp] TCP disconnected");
-	}
-	else
-	{
-		logger_log("[tcp] Error on TCP disconnection");
-	}
+	///////////////////////////////////////////////////////////////////////////
+	// Subscribe
+	///////////////////////////////////////////////////////////////////////////
+	logger_log("[mqtt] Sending SUBSCRIBE");
+	char topic_name[] = "topic_to_subscribe";	
+	mqtt_subscribe(topic_name);	
+
+
+
+
+	// TODO implement mqtt disconnect
+
+	//if (tcp_disconnect())
+	//{
+	//	logger_log("[tcp] TCP disconnected");
+	//}
+	//else
+	//{
+	//	logger_log("[tcp] Error on TCP disconnection");
+	//}
 
     return 0;
 }

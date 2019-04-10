@@ -25,6 +25,7 @@ uint8_t mqtt_send(void * message)
 	ConnectMessage *connect_message;
 	PublishMessage *publish_message;
 	PingReqMessage *pingreq_message;
+	SubscribeMessage *subscribe_message;
 
 	if ((type > 0) && (type < MESSAGE_TYPE_COUNT))
 	{
@@ -53,12 +54,18 @@ uint8_t mqtt_send(void * message)
 				tcp_send(buffer, len);
 			return TRUE;
 
+			case SUBSCRIBE:
+				subscribe_message = (SubscribeMessage *) message;
+				len = mqtt_pack_subscribe_message(*subscribe_message, buffer);
+				log_subscribe_message(*subscribe_message);
+				tcp_send(buffer, len);
+			return TRUE;
+		
 			case CONNACK:
 			case PUBACK:
 			case PBUREC:
 			case PUBREL:
 			case PUBCOMP:
-			case SUBSCRIBE:
 			case SUBACK:
 			case UNSUBSCRIBE:
 			case UNSUBACK:
