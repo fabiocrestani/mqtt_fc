@@ -162,18 +162,26 @@ void dump_parsed_puback_message(PubAckMessage puback_message)
 	printf("{Message ID: %d}\n", puback_message.message_id);
 }
 
-void dump_parsed_pingreq_message(PingReqMessage message)
+void dump_parsed_pingreq_message(PingReqMessage pingreq_message)
 {
 	printf("PINGREQ message: ");
 	printf("{Message Type: %s}\n", 
-		translate_message_type(message.header.message_type));
+		translate_message_type(pingreq_message.header.message_type));
 }
 
-void dump_parsed_pingresp_message(PingRespMessage message)
+void dump_parsed_pingresp_message(PingRespMessage pingresp_message)
 {
 	printf("PINGRESP message: ");
 	printf("{Message Type: %s}\n", 
-		translate_message_type(message.header.message_type));
+		translate_message_type(pingresp_message.header.message_type));
+}
+
+void dump_parsed_suback_message(SubAckMessage suback_message)
+{
+	printf("SUBACK message: ");
+	printf("{Message Type: %s Message ID: %d Granted QoS: %d}\n", 
+		translate_message_type(suback_message.header.message_type),
+		suback_message.message_id, suback_message.granted_qos);
 }
 
 void dump_connect_message(ConnectMessage message)
@@ -200,6 +208,18 @@ void dump_publish_message(PublishMessage message)
 #endif
 }
 
+void dump_puback_message(PubAckMessage message)
+{
+#if LOG_DUMP_PUBACK == TRUE
+	char buffer[1024];
+	uint32_t len = 0;
+	len = mqtt_pack_puback_message(message, buffer);
+	dump(buffer, len);
+#else
+	(void) message;
+#endif
+}
+
 void dump_subscribe_message(SubscribeMessage message)
 {
 #if LOG_DUMP_SUBSCRIBE == TRUE
@@ -212,12 +232,12 @@ void dump_subscribe_message(SubscribeMessage message)
 #endif
 }
 
-void dump_puback_message(PubAckMessage message)
+void dump_suback_message(SubAckMessage message)
 {
-#if LOG_DUMP_PUBACK == TRUE
+#if LOG_DUMP_SUBACK == TRUE
 	char buffer[1024];
 	uint32_t len = 0;
-	len = mqtt_pack_puback_message(message, buffer);
+	len = mqtt_pack_suback_message(message, buffer);
 	dump(buffer, len);
 #else
 	(void) message;
@@ -277,6 +297,20 @@ void log_publish_message(PublishMessage publish_message)
 #endif
 }
 
+void log_puback_message(PubAckMessage puback_message)
+{
+#if LOG_PUBACK == TRUE
+	logger_print_separator();
+	dump_parsed_fixed_header(puback_message.header);
+	dump_parsed_puback_message(puback_message);
+	dump_puback_message(puback_message);
+	logger_print_separator();
+	printf("\n");
+#else
+	(void) puback_message;
+#endif
+}
+
 void log_subscribe_message(SubscribeMessage subscribe_message)
 {
 #if LOG_SUBSCRIBE == TRUE
@@ -291,17 +325,17 @@ void log_subscribe_message(SubscribeMessage subscribe_message)
 #endif
 }
 
-void log_puback_message(PubAckMessage puback_message)
+void log_suback_message(SubAckMessage suback_message)
 {
-#if LOG_PUBACK == TRUE
+#if LOG_SUBACK == TRUE
 	logger_print_separator();
-	dump_parsed_fixed_header(puback_message.header);
-	dump_parsed_puback_message(puback_message);
-	dump_puback_message(puback_message);
+	dump_parsed_fixed_header(suback_message.header);
+	dump_parsed_suback_message(suback_message);
+	dump_suback_message(suback_message);
 	logger_print_separator();
 	printf("\n");
 #else
-	(void) puback_message;
+	(void) suback_message;
 #endif
 }
 

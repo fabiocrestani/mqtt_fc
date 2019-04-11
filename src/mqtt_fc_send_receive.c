@@ -109,13 +109,15 @@ uint8_t mqtt_handle_received_message(char *buffer, uint32_t len)
 			case PINGRESP:
 				return mqtt_handle_received_pingresp(buffer, len);
 				
+			case SUBACK:
+				return mqtt_handle_received_suback(buffer, len);
+
 			case CONNECT:
 			case PUBLISH:
 			case PBUREC:
 			case PUBREL:
 			case PUBCOMP:
 			case SUBSCRIBE:
-			case SUBACK:
 			case UNSUBSCRIBE:
 			case UNSUBACK:
 			case PINGREQ:
@@ -123,7 +125,6 @@ uint8_t mqtt_handle_received_message(char *buffer, uint32_t len)
 			printf("Cannot handle message type (%d) %s\n",
 						type, translate_message_type(type));
 			return FALSE;
-		
 		}
 	
 	}

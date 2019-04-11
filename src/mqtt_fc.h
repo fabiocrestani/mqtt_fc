@@ -30,6 +30,8 @@
 
 #define PINGRESP_MESSAGE_SIZE (2)
 
+#define SUBACK_MIN_MESSAGE_SIZE (5)
+
 ///////////////////////////////////////////////////////////////////////////////
 // ENUMS
 ///////////////////////////////////////////////////////////////////////////////
@@ -242,6 +244,39 @@ typedef struct SubscribeMessage_ {
 
 } SubscribeMessage;
 
+// A SUBACK message is sent by the server to the client to confirm receipt of a
+// SUBSCRIBE message. A SUBACK message contains a list of granted QoS levels. 
+// The order of granted QoS levels in the SUBACK message matches the order of 
+// the topic names in the corresponding SUBSCRIBE message.
+typedef struct SubAckMessage_ {
+	FixedHeader header;
+	
+	union {
+		uint16_t message_id;
+		struct {
+			uint8_t message_id_lsb;
+			uint8_t	message_id_msb;
+		};	
+	};
+
+	uint8_t granted_qos;
+
+} SubAckMessage;
+
+// The DISCONNECT message is sent from the client to the server to indicate 
+// that it is about to close its TCP/IP connection. This allows for a clean
+// disconnection, rather than just dropping the line. 
+// If the client had connected with the clean session flag set, then all 
+// previously maintained information about the client will be discarded.
+// A server should not rely on the client to close the TCP/IP connection after
+// receiving a DISCONNECT.
+typedef struct DisconnectMessage_ {
+	FixedHeader header;
+
+} DisconnectMessage;
+
+
+
 ///////////////////////////////////////////////////////////////////////////////
 // FUNCTIONS
 ///////////////////////////////////////////////////////////////////////////////
@@ -283,5 +318,6 @@ uint8_t mqtt_subscribe(char topic_to_subscribe[], uint8_t requested_qos);
 uint8_t mqtt_handle_received_connack(char *buffer, uint32_t len);
 uint8_t mqtt_handle_received_puback(char *buffer, uint32_t len);
 uint8_t mqtt_handle_received_pingresp(char *buffer, uint32_t len);
+uint8_t mqtt_handle_received_suback(char *buffer, uint32_t len);
 
 #endif // __MQTT_H__

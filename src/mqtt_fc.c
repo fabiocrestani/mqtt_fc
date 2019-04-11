@@ -229,6 +229,18 @@ uint32_t mqtt_pack_publish_message(PublishMessage message, char *buffer)
 	return len;
 }
 
+uint32_t mqtt_pack_puback_message(PubAckMessage message, char *buffer)
+{
+	uint32_t len = 0;
+
+	buffer[len++] = message.header.byte1;
+	buffer[len++] = message.header.byte2;
+	buffer[len++] = message.message_id_msb;
+	buffer[len++] = message.message_id_lsb;
+
+	return len;
+}
+
 uint32_t mqtt_pack_subscribe_message(SubscribeMessage message, char *buffer)
 {
 	uint32_t len = 0;
@@ -255,7 +267,7 @@ uint32_t mqtt_pack_subscribe_message(SubscribeMessage message, char *buffer)
 	return len;
 }
 
-uint32_t mqtt_pack_puback_message(PubAckMessage message, char *buffer)
+uint32_t mqtt_pack_suback_message(SubAckMessage message, char *buffer)
 {
 	uint32_t len = 0;
 
@@ -263,6 +275,7 @@ uint32_t mqtt_pack_puback_message(PubAckMessage message, char *buffer)
 	buffer[len++] = message.header.byte2;
 	buffer[len++] = message.message_id_msb;
 	buffer[len++] = message.message_id_lsb;
+	buffer[len++] = message.granted_qos;
 
 	return len;
 }
@@ -328,7 +341,6 @@ uint8_t mqtt_unpack_puback_message(char buffer[], uint32_t len,
 uint8_t mqtt_unpack_pingresp_message(char buffer[], uint32_t len, 
 										PingRespMessage *pingresp_message)
 {
-
 	if (len != PINGRESP_MESSAGE_SIZE)
 	{
 		return FALSE;
@@ -336,6 +348,23 @@ uint8_t mqtt_unpack_pingresp_message(char buffer[], uint32_t len,
 
 	pingresp_message->header.byte1 = buffer[0];
 	pingresp_message->header.byte2 = buffer[1];
+
+	return TRUE;
+}
+
+uint8_t mqtt_unpack_suback_message(char buffer[], uint32_t len, 
+									SubAckMessage *suback_message)
+{
+	if (len < SUBACK_MIN_MESSAGE_SIZE)
+	{
+		return FALSE;
+	}
+
+	suback_message->header.byte1 = buffer[0];
+	suback_message->header.byte2 = buffer[1];
+	suback_message->message_id_msb = buffer[2];
+	suback_message->message_id_lsb = buffer[3];
+	suback_message->granted_qos = buffer[4];
 
 	return TRUE;
 }
@@ -451,6 +480,26 @@ uint8_t mqtt_handle_received_pingresp(char *buffer, uint32_t len)
 	if (mqtt_unpack_pingresp_message(buffer, len, &message))
 	{
 		log_pingresp_message(message);
+		return TRUE;
+	}
+	else 
+	{
+		logger_log("[mqtt] Error parsing PINGRESP message");
+		return FALSE;
+	}
+}
+
+// A SUBACK message is sent by the server to the client to confirm receipt of a
+// SUBSCRIBE message. A SUBACK message contains a list of granted QoS levels. 
+// The order of granted QoS levels in the SUBACK message matches the order of 
+// the topic names in the corresponding SUBSCRIBE message.
+uint8_t mqtt_handle_received_suback(char *buffer, uint32_t len)
+{
+	logger_log("[mqtt] SUBSCRIBE response received: SUBACK");
+	SubAckMessage message;
+	if (mqtt_unpack_suback_message(buffer, len, &message))
+	{
+		log_suback_message(message);
 		return TRUE;
 	}
 	else 
