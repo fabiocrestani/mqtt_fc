@@ -294,9 +294,10 @@ PublishMessage mqtt_build_publish_message(char topic_name[], uint16_t id,
 
 // Message packers
 uint32_t mqtt_pack_publish_message(PublishMessage message, char *buffer);
-uint32_t mqtt_pack_subscribe_message(SubscribeMessage message, char *buffer);
 uint32_t mqtt_pack_connect_message(ConnectMessage message, char *buffer);
 uint32_t mqtt_pack_puback_message(PubAckMessage message, char *buffer);
+uint32_t mqtt_pack_subscribe_message(SubscribeMessage message, char *buffer);
+uint32_t mqtt_pack_suback_message(SubAckMessage message, char *buffer);
 uint32_t mqtt_pack_pingreq_message(PingReqMessage message, char *buffer);
 uint32_t mqtt_pack_pingresp_message(PingRespMessage message, char *buffer);
 
@@ -319,5 +320,8 @@ uint8_t mqtt_handle_received_connack(char *buffer, uint32_t len);
 uint8_t mqtt_handle_received_puback(char *buffer, uint32_t len);
 uint8_t mqtt_handle_received_pingresp(char *buffer, uint32_t len);
 uint8_t mqtt_handle_received_suback(char *buffer, uint32_t len);
+
+// Polling for remote Publish messages
+uint8_t mqtt_poll_publish_messages(PublishMessage *received_message);
 
 #endif // __MQTT_H__

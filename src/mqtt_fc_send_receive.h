@@ -14,6 +14,7 @@
 uint8_t mqtt_send(void * message);
 
 uint8_t mqtt_receive_response(void);
+uint8_t mqtt_poll_receive(char *buffer, uint32_t *len);
 uint8_t mqtt_handle_received_message(char *buffer, uint32_t len);
 
 uint8_t mqtt_handle_received_connack(char *buffer, uint32_t len);

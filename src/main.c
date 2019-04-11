@@ -118,6 +118,20 @@ int main(int argc, char *argv[])
 	char topic_name[] = "abc";	
 	mqtt_subscribe(topic_name, 1);	
 
+	///////////////////////////////////////////////////////////////////////////
+	// Wait for remote PUBLISH messages
+	///////////////////////////////////////////////////////////////////////////
+	while (1)
+	{
+		PublishMessage received_message;		
+		if (mqtt_poll_publish_messages(&received_message))
+		{
+			logger_log("Message received!");
+		}
+
+		sleep(1);	
+	}
+
 
 
 

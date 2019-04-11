@@ -509,3 +509,30 @@ uint8_t mqtt_handle_received_suback(char *buffer, uint32_t len)
 	}
 }
 
+///////////////////////////////////////////////////////////////////////////////
+// Remote Publish message handler
+///////////////////////////////////////////////////////////////////////////////
+uint8_t mqtt_poll_publish_messages(PublishMessage *received_message)
+{
+	char buffer[1024];
+	uint32_t len;
+	FixedHeader header;
+
+	mqtt_poll_receive(buffer, &len);
+
+	if (mqtt_unpack_fixed_header(buffer, len, &header))
+	{
+		if (header.message_type == PUBLISH)
+		{
+		
+			return TRUE;	
+		}
+	}
+
+	return FALSE;
+}
+
+
+
+
+

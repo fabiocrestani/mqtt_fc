@@ -81,10 +81,22 @@ uint8_t mqtt_send(void * message)
 	return FALSE;
 }
 
+uint8_t mqtt_poll_receive(char *buffer, uint32_t *len)
+{
+	if (buffer == NULL)
+	{
+		return FALSE;
+	}
+
+	tcp_receive(buffer, len);
+
+	return TRUE;
+}
+
 uint8_t mqtt_receive_response(void)
 {
 	char buffer[1024];
-	unsigned int len = 18;
+	unsigned int len = 0;
 
 	tcp_receive(buffer, &len);
 	mqtt_handle_received_message(buffer, len);
