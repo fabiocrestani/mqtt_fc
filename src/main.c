@@ -22,26 +22,6 @@
 #include "timer.h"
 #include "fsm.h"
 
-/*uint8_t callback_tcp_connect(void)
-{
-	char mqtt_tcp_server_address[] = "iot.eclipse.org";
-	uint32_t mqtt_tcp_server_port_number = 1883;
-
-	if (!tcp_connect())
-	{
-		printf("[tcp] Error connecting to %s:%d\n", mqtt_tcp_server_address,
-												mqtt_tcp_server_port_number);
-		return FALSE;
-	
-	}
-
-	printf("[tcp] TCP connected to %s:%d\n", mqtt_tcp_server_address,
-												 mqtt_tcp_server_port_number);
-	return TRUE;
-}*/
-
-
-
 int main(int argc, char *argv[])
 {
 	(void) argc;
@@ -100,22 +80,23 @@ int main(int argc, char *argv[])
 	// Publish
 	///////////////////////////////////////////////////////////////////////////
 	logger_log("[mqtt] Sending PUBLISH message");
-	char topic_to_publish[] = "abc";
-	char message_to_publish[] = "hello world :)";
+	char topic_to_publish[] = "abcd";
+	//char message_to_publish[] = "hello world :)";
+	char message_to_publish[] = "2";
 
-	mqtt_publish(topic_to_publish, message_to_publish);
+	mqtt_publish(topic_to_publish, message_to_publish, E_QOS_PUBACK);
 
 	///////////////////////////////////////////////////////////////////////////
 	// Ping
 	///////////////////////////////////////////////////////////////////////////
 	logger_log("[mqtt] Sending PINGREQ message");
-	mqtt_ping_request();
+	//mqtt_ping_request();
 	
 	///////////////////////////////////////////////////////////////////////////
 	// Subscribe
 	///////////////////////////////////////////////////////////////////////////
 	logger_log("[mqtt] Sending SUBSCRIBE");
-	char topic_name[] = "abc";	
+	char topic_name[] = "abcd";	
 	mqtt_subscribe(topic_name, 1);	
 
 	///////////////////////////////////////////////////////////////////////////
@@ -126,8 +107,11 @@ int main(int argc, char *argv[])
 		PublishMessage received_message;		
 		if (mqtt_poll_publish_messages(&received_message))
 		{
-			logger_log("Message received!");
+			log_publish_message(received_message);
+
+			// TODO Send ACK if QoS asks for
 		}
+
 
 		sleep(1);	
 	}
@@ -136,7 +120,6 @@ int main(int argc, char *argv[])
 
 
 	// TODO implement mqtt disconnect
-
 	//if (tcp_disconnect())
 	//{
 	//	logger_log("[tcp] TCP disconnected");

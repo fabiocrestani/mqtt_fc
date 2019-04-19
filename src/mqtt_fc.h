@@ -32,6 +32,8 @@
 
 #define SUBACK_MIN_MESSAGE_SIZE (5)
 
+#define RECEIVED_PUBLISH_MIN_MESSAGE_SIZE (7)
+
 ///////////////////////////////////////////////////////////////////////////////
 // ENUMS
 ///////////////////////////////////////////////////////////////////////////////
@@ -290,7 +292,7 @@ ConnectMessage mqtt_build_connect_message(char protocol_name[],
 	char client_id[]);
 
 PublishMessage mqtt_build_publish_message(char topic_name[], uint16_t id, 
-										  char payload[], uint32_t payload_len);
+	char payload[], uint32_t payload_len, EQosLevel qos);
 
 // Message packers
 uint32_t mqtt_pack_publish_message(PublishMessage message, char *buffer);
@@ -311,7 +313,8 @@ uint8_t mqtt_unpack_puback_message(char buffer[], uint32_t len,
 
 // Commands
 uint8_t	mqtt_connect(char mqtt_protocol_name[], char mqtt_client_id[]);
-uint8_t mqtt_publish(char topic_to_publish[], char message_to_publish[]);
+uint8_t mqtt_publish(char topic_to_publish[], char message_to_publish[],
+						EQosLevel qos);
 uint8_t mqtt_ping_request(void);
 uint8_t mqtt_subscribe(char topic_to_subscribe[], uint8_t requested_qos);
 

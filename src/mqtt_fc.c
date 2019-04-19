@@ -15,6 +15,7 @@
 #include <netdb.h>
 
 #include "mqtt_fc.h"
+#include "mqtt_fc_pack_unpack.h"
 #include "mqtt_fc_send_receive.h"
 #include "tcp.h"
 #include "logger.h"
@@ -45,6 +46,11 @@ FixedHeader mqtt_build_fixed_header(uint8_t message_type, uint8_t dup,
 	header.qos = qos;
 	header.retain = retain;
 	header.remaining_length = remaining_length;
+
+	if (header.qos == 0)
+	{
+		header.remaining_length = remaining_length - 2;
+	}
 
 	return header;
 }
@@ -104,7 +110,7 @@ ConnectMessage mqtt_build_connect_message(char protocol_name[],
 }
 
 PublishMessage mqtt_build_publish_message(char topic_name[], uint16_t id, 
-										  char payload[], uint32_t payload_len)
+		char payload[], uint32_t payload_len, EQosLevel qos)
 {	
 	PublishMessage m;
 
@@ -127,7 +133,7 @@ PublishMessage mqtt_build_publish_message(char topic_name[], uint16_t id,
 		m.payload[i] = payload[i];
 	}
 
-	m.header = mqtt_build_fixed_header(PUBLISH, 0, 1, 0, 
+	m.header = mqtt_build_fixed_header(PUBLISH, 0, qos, 0, 
 										topic_name_len + 4 + payload_len);
 
 	return m;
@@ -163,213 +169,6 @@ PingReqMessage mqtt_build_ping_message()
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// Pack message to a buffer
-///////////////////////////////////////////////////////////////////////////////
-uint32_t mqtt_pack_connect_message(ConnectMessage message, char *buffer)
-{
-	uint32_t len = 0;
-	uint16_t remaining_len = message.protocol_name_len;
-
-	buffer[len++] = message.header.byte1;
-	buffer[len++] = message.header.byte2;
-	buffer[len++] = message.protocol_name_len_msb;
-	buffer[len++] = message.protocol_name_len_lsb;
-
-	for (uint32_t i = 0; i < remaining_len; i++)
-	{
-		buffer[len++] = message.protocol_name[i];
-	}
-
-	buffer[len++] = message.version;
-	buffer[len++] = message.flags;
-	buffer[len++] = message.keep_alive_timer_msb;
-	buffer[len++] = message.keep_alive_timer_lsb;
-	buffer[len++] = message.client_id_len_msb;
-	buffer[len++] = message.client_id_len_lsb;
-
-	uint32_t client_id_len = LIMITER(message.client_id_len,
-									CONNECT_CLIENT_ID_MAX_LEN);
-
-	for (uint32_t i = 0; i < client_id_len; i++)
-	{
-		buffer[len++] = message.client_id[i];
-	}
-
-	return len;
-}
-
-uint32_t mqtt_pack_publish_message(PublishMessage message, char *buffer)
-{
-	uint32_t len = 0;
-
-	buffer[len++] = message.header.byte1;
-	buffer[len++] = message.header.byte2;
-
-	uint32_t topic_name_len = message.topic_name_len;
-	topic_name_len = LIMITER(topic_name_len, MQTT_TOPIC_NAME_MAX_LEN);
-
-	buffer[len++] = message.topic_name_len_msb;
-	buffer[len++] = message.topic_name_len_lsb;
-
-	for (uint32_t i = 0; i < topic_name_len; i++)
-	{
-		buffer[len++] = message.topic_name[i];
-	}
-
-	buffer[len++] = message.message_id_msb;
-	buffer[len++] = message.message_id_lsb;
-
-	uint32_t payload_len = message.header.remaining_length - len + 2;
-
-	for (uint32_t i = 0; i < payload_len; i++)
-	{
-		buffer[len++] = message.payload[i];
-	}
-
-	return len;
-}
-
-uint32_t mqtt_pack_puback_message(PubAckMessage message, char *buffer)
-{
-	uint32_t len = 0;
-
-	buffer[len++] = message.header.byte1;
-	buffer[len++] = message.header.byte2;
-	buffer[len++] = message.message_id_msb;
-	buffer[len++] = message.message_id_lsb;
-
-	return len;
-}
-
-uint32_t mqtt_pack_subscribe_message(SubscribeMessage message, char *buffer)
-{
-	uint32_t len = 0;
-
-	buffer[len++] = message.header.byte1;
-	buffer[len++] = message.header.byte2;
-
-	buffer[len++] = message.message_id_msb;
-	buffer[len++] = message.message_id_lsb;
-
-	uint32_t topic_name_len = message.topic_name_len;
-	topic_name_len = LIMITER(topic_name_len, MQTT_TOPIC_NAME_MAX_LEN);
-
-	buffer[len++] = message.topic_name_len_msb;
-	buffer[len++] = message.topic_name_len_lsb;
-
-	for (uint32_t i = 0; i < topic_name_len; i++)
-	{
-		buffer[len++] = message.topic_name[i];
-	}
-
-	buffer[len++] = message.requested_qos;
-
-	return len;
-}
-
-uint32_t mqtt_pack_suback_message(SubAckMessage message, char *buffer)
-{
-	uint32_t len = 0;
-
-	buffer[len++] = message.header.byte1;
-	buffer[len++] = message.header.byte2;
-	buffer[len++] = message.message_id_msb;
-	buffer[len++] = message.message_id_lsb;
-	buffer[len++] = message.granted_qos;
-
-	return len;
-}
-
-uint32_t mqtt_pack_pingreq_message(PingReqMessage message, char *buffer)
-{
-	uint32_t len = 0;
-
-	buffer[len++] = message.header.byte1;
-	buffer[len++] = message.header.byte2;
-
-	return len;
-}
-
-///////////////////////////////////////////////////////////////////////////////
-// Unpack message from a buffer
-///////////////////////////////////////////////////////////////////////////////
-uint8_t mqtt_unpack_fixed_header(char buffer[], uint32_t len, 
-								 FixedHeader *header)
-{
-	if (len < 2)
-	{
-		return FALSE;
-	}
-
-	header->byte1 = buffer[0];
-	header->byte2 = buffer[1];
-	
-	return TRUE;
-}
-uint8_t mqtt_unpack_connack_message(char buffer[], uint32_t len,
-								    ConnackMessage *connack_message)
-{
-	if (len != CONNACK_MESSAGE_SIZE)
-	{
-		return FALSE;
-	}
-
-	connack_message->header.byte1 = buffer[0];
-	connack_message->header.byte2 = buffer[1];
-	connack_message->message[0] = buffer[2];
-	connack_message->message[1] = buffer[3];
-
-	return TRUE;
-}
-
-uint8_t mqtt_unpack_puback_message(char buffer[], uint32_t len,
-								   PubAckMessage *puback_message)
-{
-	if (len != PUBACK_MESSAGE_SIZE)
-	{
-		return FALSE;
-	}
-
-	puback_message->header.byte1 = buffer[0];
-	puback_message->header.byte2 = buffer[1];
-	puback_message->message_id_msb = buffer[2];
-	puback_message->message_id_lsb = buffer[3];
-
-	return TRUE;
-}
-
-uint8_t mqtt_unpack_pingresp_message(char buffer[], uint32_t len, 
-										PingRespMessage *pingresp_message)
-{
-	if (len != PINGRESP_MESSAGE_SIZE)
-	{
-		return FALSE;
-	}
-
-	pingresp_message->header.byte1 = buffer[0];
-	pingresp_message->header.byte2 = buffer[1];
-
-	return TRUE;
-}
-
-uint8_t mqtt_unpack_suback_message(char buffer[], uint32_t len, 
-									SubAckMessage *suback_message)
-{
-	if (len < SUBACK_MIN_MESSAGE_SIZE)
-	{
-		return FALSE;
-	}
-
-	suback_message->header.byte1 = buffer[0];
-	suback_message->header.byte2 = buffer[1];
-	suback_message->message_id_msb = buffer[2];
-	suback_message->message_id_lsb = buffer[3];
-	suback_message->granted_qos = buffer[4];
-
-	return TRUE;
-}
-
-///////////////////////////////////////////////////////////////////////////////
 // Command handlers
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -392,12 +191,13 @@ uint8_t	mqtt_connect(char mqtt_protocol_name[], char mqtt_client_id[])
 // is delivered to connected subscribers for that topic. If a client subscribes 
 // to one or more topics, any message published to those topics are sent by the
 // server to the client as a PUBLISH message.
-uint8_t mqtt_publish(char topic_to_publish[], char message_to_publish[])
+uint8_t mqtt_publish(char topic_to_publish[], char message_to_publish[],
+						EQosLevel qos)
 {
 	PublishMessage publish_message;
 	publish_message = mqtt_build_publish_message(topic_to_publish, 
 						mqtt_get_new_message_id(), message_to_publish, 
-						strlen(message_to_publish));
+						strlen(message_to_publish), qos);
 	mqtt_send((void *) &publish_message);
 	mqtt_receive_response();
 	return TRUE;
@@ -524,7 +324,11 @@ uint8_t mqtt_poll_publish_messages(PublishMessage *received_message)
 	{
 		if (header.message_type == PUBLISH)
 		{
-		
+			printf("[mqtt] PUBLISH message received with len %d\n", len);
+			
+			// TODO fix bug here
+			mqtt_unpack_publish_message(buffer, len, received_message);
+
 			return TRUE;	
 		}
 	}

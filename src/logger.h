@@ -13,23 +13,24 @@
 
 #define LOG_CONNECT (FALSE)
 #define LOG_CONNACK (FALSE)
-#define LOG_PUBLISH (FALSE)
+#define LOG_PUBLISH (TRUE)
 #define LOG_PUBACK (FALSE)
 #define LOG_PINGREQ (FALSE)
 #define LOG_PINGRESP (FALSE)
-#define LOG_SUBSCRIBE (TRUE)
-#define LOG_SUBACK (TRUE)
+#define LOG_SUBSCRIBE (FALSE)
+#define LOG_SUBACK (FALSE)
 
 #define LOG_DUMP (TRUE)
 #define LOG_DUMP_CONNECT (FALSE)
-#define LOG_DUMP_PUBLISH (FALSE)
+#define LOG_DUMP_PUBLISH (TRUE)
 #define LOG_DUMP_PUBACK (FALSE)
 #define LOG_DUMP_PINGREQ (FALSE)
-#define LOG_DUMP_SUBSCRIBE (TRUE)
-#define LOG_DUMP_SUBACK (TRUE)
+#define LOG_DUMP_SUBSCRIBE (FALSE)
+#define LOG_DUMP_SUBACK (FALSE)
 
 // Log
 void logger_log(char buffer[]);
+void dump(char *data, uint32_t len);
 
 // Log messages with a single function call
 void log_connect_message(ConnectMessage connect_message);

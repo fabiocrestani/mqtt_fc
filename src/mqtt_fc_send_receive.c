@@ -99,6 +99,7 @@ uint8_t mqtt_receive_response(void)
 	unsigned int len = 0;
 
 	tcp_receive(buffer, &len);
+
 	mqtt_handle_received_message(buffer, len);
 
 	return TRUE;

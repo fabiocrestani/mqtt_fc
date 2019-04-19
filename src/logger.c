@@ -17,6 +17,9 @@
 
 void logger_print_separator(void);
 
+const char * translate_qos(uint8_t qos);
+const char * translate_true_false(uint8_t input);
+
 void dump(char *data, uint32_t len)
 {
 #if LOG_DUMP == TRUE
@@ -111,11 +114,13 @@ void logger_log(char buffer[])
 void dump_parsed_fixed_header(FixedHeader header)
 {
 	printf("Fixed header:\n");
-	printf("byte1: 0x%02x {type: 0x%x (%s) DUP: 0x%x QoS: 0x%x RETAIN: 0x%x}\n\
-byte2: 0x%02x {remaining length: %d}\n",
+	printf("byte1: 0x%02x {type: 0x%x (%s) DUP: 0x%x (%s) QoS: 0x%x (%s)\n\
+RETAIN: 0x%x (%s)}\nbyte2: 0x%02x {remaining length: %d}\n",
 		header.byte1, header.message_type, 
-		translate_message_type(header.message_type), header.dup, 
-		header.qos, header.retain, header.byte2, header.remaining_length);
+		translate_message_type(header.message_type), header.dup,
+		translate_true_false(header.dup), header.qos, translate_qos(header.qos), 
+		header.retain, translate_true_false(header.retain), header.byte2,
+		header.remaining_length);
 }
 
 void dump_parsed_connect_message(ConnectMessage message)
@@ -143,9 +148,17 @@ void dump_parsed_connack_message(ConnackMessage connack_message)
 void dump_parsed_publish_message(PublishMessage publish_message)
 {
 	printf("PUBLISH message: ");
-	printf("{Topic name: (%d) %s Message Identifier: %d}\n",
+	if (publish_message.header.qos == 0)
+	{
+		printf("{Topic name: (%d) %s Message Identifier: none}\n",
+			publish_message.topic_name_len, publish_message.topic_name);
+	}
+	else
+	{
+		printf("{Topic name: (%d) %s Message Identifier: %d}\n",
 			publish_message.topic_name_len, publish_message.topic_name, 
 			publish_message.message_id);
+	}
 }
 
 void dump_parsed_subscribe_message(SubscribeMessage subscribe_message)
@@ -424,3 +437,23 @@ const char * translate_qos_level(EQosLevel qos_level)
 	}
 }
 
+const char * translate_qos(uint8_t qos)
+{
+	switch (qos)
+	{
+		case 0: return "At most once";
+		case 1: return "At least once";
+		case 2: return "Exactly once";
+		default: return "?";
+	}
+}
+
+const char * translate_true_false(uint8_t input)
+{
+	switch (input)
+	{
+		case FALSE: return "false";
+		case TRUE: return "true";
+		default: return "?";
+	}
+}
