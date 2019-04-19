@@ -107,11 +107,12 @@ int main(int argc, char *argv[])
 		PublishMessage received_message;		
 		if (mqtt_poll_publish_messages(&received_message))
 		{
-			log_publish_message(received_message);
+			//log_publish_message(received_message);
+			log_publish_message_payload(received_message);
 
 			// TODO Send ACK if QoS asks for
+			mqtt_send_response_to_publish_message(received_message);
 		}
-
 
 		sleep(1);	
 	}

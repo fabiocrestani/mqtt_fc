@@ -26,6 +26,7 @@ uint8_t mqtt_send(void * message)
 	PublishMessage *publish_message;
 	PingReqMessage *pingreq_message;
 	SubscribeMessage *subscribe_message;
+	PubAckMessage *puback_message;
 
 	if ((type > 0) && (type < MESSAGE_TYPE_COUNT))
 	{
@@ -60,10 +61,16 @@ uint8_t mqtt_send(void * message)
 				log_subscribe_message(*subscribe_message);
 				tcp_send(buffer, len);
 			return TRUE;
-		
-			case CONNACK:
+
 			case PUBACK:
-			case PBUREC:
+				puback_message = (PubAckMessage *) message;
+				len = mqtt_pack_puback_message(*puback_message, buffer);
+				//log_puback_message(*subscribe_message);
+				tcp_send(buffer, len);
+			return TRUE;
+
+			case CONNACK:
+			case PUBREC:
 			case PUBREL:
 			case PUBCOMP:
 			case SUBACK:
@@ -127,7 +134,7 @@ uint8_t mqtt_handle_received_message(char *buffer, uint32_t len)
 
 			case CONNECT:
 			case PUBLISH:
-			case PBUREC:
+			case PUBREC:
 			case PUBREL:
 			case PUBCOMP:
 			case SUBSCRIBE:
@@ -146,11 +153,6 @@ uint8_t mqtt_handle_received_message(char *buffer, uint32_t len)
 		return FALSE;
 	}
 }
-
-
-
-
-
 
 
 

@@ -42,7 +42,7 @@ typedef enum MessageType_ {
 	CONNACK = 0x2,
 	PUBLISH = 0x3,
 	PUBACK = 0x4,
-	PBUREC = 0x5,
+	PUBREC = 0x5,
 	PUBREL = 0x6,
 	PUBCOMP = 0x7,
 	SUBSCRIBE = 0x8,
@@ -183,6 +183,7 @@ typedef struct PublishMessage_ {
 	};
 
 	uint8_t payload[PUBLISH_PAYLOAD_MAX_LEN];
+	uint32_t payload_len;
 } PublishMessage;
 
 // A PUBACK message is the response to a PUBLISH message with QoS level 1. 

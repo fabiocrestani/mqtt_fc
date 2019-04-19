@@ -271,17 +271,16 @@ uint8_t mqtt_unpack_publish_message(char buffer[], uint32_t len,
 	{
 		received_message->message_id_msb = buffer[k++];
 		received_message->message_id_lsb = buffer[k++];
-		payload_len = len - k;
 	}
-	else
-	{
-		payload_len = len - k + 2;
-	}
+
+	payload_len = len - k;
+	received_message->payload_len = payload_len;
 
 	for (i = 0; i < payload_len; i++)
 	{
 		received_message->payload[i] = buffer[k++];
 	}
+	received_message->payload[i] = 0;
 
 	return TRUE;
 }

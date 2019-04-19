@@ -13,16 +13,18 @@
 
 #define LOG_CONNECT (FALSE)
 #define LOG_CONNACK (FALSE)
-#define LOG_PUBLISH (TRUE)
+#define LOG_PUBLISH (FALSE)
 #define LOG_PUBACK (FALSE)
 #define LOG_PINGREQ (FALSE)
 #define LOG_PINGRESP (FALSE)
 #define LOG_SUBSCRIBE (FALSE)
 #define LOG_SUBACK (FALSE)
 
+#define LOG_PUBLISH_PAYLOAD (TRUE)
+
 #define LOG_DUMP (TRUE)
 #define LOG_DUMP_CONNECT (FALSE)
-#define LOG_DUMP_PUBLISH (TRUE)
+#define LOG_DUMP_PUBLISH (FALSE)
 #define LOG_DUMP_PUBACK (FALSE)
 #define LOG_DUMP_PINGREQ (FALSE)
 #define LOG_DUMP_SUBSCRIBE (FALSE)
@@ -36,6 +38,7 @@ void dump(char *data, uint32_t len);
 void log_connect_message(ConnectMessage connect_message);
 void log_connack_message(ConnackMessage connack_message);
 void log_publish_message(PublishMessage message);
+void log_publish_message_payload(PublishMessage publish_message);
 void log_puback_message(PubAckMessage puback_message);
 void log_subscribe_message(SubscribeMessage subscribe_message);
 void log_suback_message(SubAckMessage suback_message);

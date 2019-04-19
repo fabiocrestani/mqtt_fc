@@ -310,6 +310,23 @@ void log_publish_message(PublishMessage publish_message)
 #endif
 }
 
+void log_publish_message_payload(PublishMessage publish_message)
+{
+#if LOG_PUBLISH_PAYLOAD == TRUE
+	char temp[128];
+
+	publish_message.payload[publish_message.payload_len] = 0;
+
+	sprintf(temp, "[mqtt] Publish message payload received: (%d) %s", 
+		publish_message.payload_len, publish_message.payload);
+	logger_log(temp);
+#else
+	(void) publish_message;
+#endif
+}
+
+
+
 void log_puback_message(PubAckMessage puback_message)
 {
 #if LOG_PUBACK == TRUE
@@ -392,7 +409,7 @@ const char * translate_message_type(MessageType message_type)
 		case CONNACK: return "CONNACK";
 		case PUBLISH: return "PUBLISH";
 		case PUBACK: return "PUBACK";
-		case PBUREC: return "PBUREC";
+		case PUBREC: return "PUBREC";
 		case PUBREL: return "PUBREL";
 		case PUBCOMP: return "PUBCOMP";
 		case SUBSCRIBE: return "SUBSCRIBE";

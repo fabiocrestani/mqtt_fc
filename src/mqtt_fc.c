@@ -168,6 +168,16 @@ PingReqMessage mqtt_build_ping_message()
 	return m;
 }
 
+PubAckMessage mqtt_build_puback_message(PublishMessage reference_message)
+{
+	PubAckMessage m;
+
+	m.header = mqtt_build_fixed_header(PUBACK, 0, 0, 0, 2);
+	m.message_id = reference_message.message_id;
+
+	return m;
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // Command handlers
 ///////////////////////////////////////////////////////////////////////////////
@@ -310,7 +320,7 @@ uint8_t mqtt_handle_received_suback(char *buffer, uint32_t len)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// Remote Publish message handler
+// Received Publish message handler
 ///////////////////////////////////////////////////////////////////////////////
 uint8_t mqtt_poll_publish_messages(PublishMessage *received_message)
 {
@@ -324,16 +334,34 @@ uint8_t mqtt_poll_publish_messages(PublishMessage *received_message)
 	{
 		if (header.message_type == PUBLISH)
 		{
-			printf("[mqtt] PUBLISH message received with len %d\n", len);
-			
-			// TODO fix bug here
 			mqtt_unpack_publish_message(buffer, len, received_message);
-
 			return TRUE;	
 		}
 	}
 
 	return FALSE;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// Received Publish response handler
+///////////////////////////////////////////////////////////////////////////////
+uint8_t	mqtt_send_response_to_publish_message(PublishMessage publish_message)
+{
+	PubAckMessage puback_message;
+	//PubRecMessage pubrec_message;
+
+	switch (publish_message.header.qos)
+	{
+		case E_QOS_PUBACK: 
+			puback_message = mqtt_build_puback_message(publish_message);
+			return mqtt_send(&puback_message);
+
+		//case E_QOS_PUBREC: return mqtt_send_pubrec(message);
+
+		case E_QOS_NONE:
+		default:
+		return TRUE;
+	}
 }
 
 
