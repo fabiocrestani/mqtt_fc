@@ -79,14 +79,11 @@ uint32_t mqtt_pack_publish_message(PublishMessage message, char *buffer)
 	{
 		buffer[len++] = message.message_id_msb;
 		buffer[len++] = message.message_id_lsb;
-		payload_len = message.header.remaining_length - len + 2;
-	}
-	else
-	{
-		payload_len = message.header.remaining_length - len + 2;
 	}
 
-	for (uint32_t i = 0; i < payload_len; i++)
+	payload_len = message.header.remaining_length - len + 2;
+
+	for (int32_t i = 0; i < payload_len; i++)
 	{
 		buffer[len++] = message.payload[i];
 	}
