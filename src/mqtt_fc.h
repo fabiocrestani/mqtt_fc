@@ -328,4 +328,7 @@ uint8_t mqtt_handle_received_suback(char *buffer, uint32_t len);
 // Polling for remote Publish messages
 uint8_t mqtt_poll_publish_messages(PublishMessage *received_message);
 
+// Response for remote Publish messages
+uint8_t	mqtt_send_response_to_publish_message(PublishMessage publish_message);
+
 #endif // __MQTT_H__

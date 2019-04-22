@@ -251,7 +251,7 @@ uint8_t mqtt_handle_received_connack(char *buffer, uint32_t len)
 	ConnackMessage connack_message;
 	if (mqtt_unpack_connack_message(buffer, len, &connack_message))
 	{
-		log_connack_message(connack_message);
+		log_message(&connack_message);
 		return TRUE;
 	}
 	else 
@@ -271,7 +271,7 @@ uint8_t mqtt_handle_received_puback(char *buffer, uint32_t len)
 	PubAckMessage puback_message;
 	if (mqtt_unpack_puback_message(buffer, len, &puback_message))
 	{
-		log_puback_message(puback_message);
+		log_message(&puback_message);
 		return TRUE;
 	}
 	else 
@@ -289,7 +289,7 @@ uint8_t mqtt_handle_received_pingresp(char *buffer, uint32_t len)
 	PingRespMessage message;
 	if (mqtt_unpack_pingresp_message(buffer, len, &message))
 	{
-		log_pingresp_message(message);
+		log_message(&message);
 		return TRUE;
 	}
 	else 
@@ -309,7 +309,7 @@ uint8_t mqtt_handle_received_suback(char *buffer, uint32_t len)
 	SubAckMessage message;
 	if (mqtt_unpack_suback_message(buffer, len, &message))
 	{
-		log_suback_message(message);
+		log_message(&message);
 		return TRUE;
 	}
 	else 

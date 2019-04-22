@@ -269,45 +269,143 @@ void dump_pingreq_message(PingReqMessage message)
 #endif
 }
 
-void log_connect_message(ConnectMessage connect_message)
+void log_message(void * message)
 {
-#if LOG_CONNECT == TRUE
-	logger_print_separator();
-	dump_connect_message(connect_message);
-	dump_parsed_fixed_header(connect_message.header);
-	dump_parsed_connect_message(connect_message);
-	logger_print_separator();
-	printf("\n");
-#else
-	(void) connect_message;
-#endif
-}
+	FixedHeader *header = (FixedHeader *) message;
+	uint8_t type = header->message_type;
 
-void log_connack_message(ConnackMessage connack_message)
-{
-#if LOG_CONNACK == TRUE
-	logger_print_separator();
-	dump_parsed_fixed_header(connack_message.header);
-	dump_parsed_connack_message(connack_message);
-	logger_print_separator();
-	printf("\n");
-#else
-	(void) connack_message;
-#endif
-}
+	ConnectMessage *connect_message;
+	ConnackMessage *connack_message;
+	PublishMessage *publish_message;
+	PingReqMessage *pingreq_message;
+	PingRespMessage *pingresp_message;
+	SubscribeMessage *subscribe_message;
+	PubAckMessage *puback_message;
+	SubAckMessage *suback_message;
 
-void log_publish_message(PublishMessage publish_message)
-{
-#if LOG_PUBLISH == TRUE
-	logger_print_separator();
-	dump_parsed_fixed_header(publish_message.header);
-	dump_parsed_publish_message(publish_message);
-	dump_publish_message(publish_message);
-	logger_print_separator();
-	printf("\n");
-#else
-	(void) publish_message;
-#endif
+	if ((type == 0) || (type > MESSAGE_TYPE_COUNT))
+	{
+		return;
+	}
+	
+	switch (type)
+	{
+		case CONNECT:
+			#if LOG_CONNECT == TRUE
+				connect_message = (ConnectMessage *) message;
+				logger_print_separator();
+				dump_connect_message(*connect_message);
+				dump_parsed_fixed_header(connect_message->header);
+				dump_parsed_connect_message(*connect_message);
+				logger_print_separator();
+				printf("\n");
+			#else
+				(void) connect_message;
+			#endif
+		return;
+
+		case PUBLISH:
+			#if LOG_PUBLISH == TRUE
+				publish_message = (PublishMessage *) message;
+				logger_print_separator();
+				dump_parsed_fixed_header(publish_message->header);
+				dump_parsed_publish_message(*publish_message);
+				dump_publish_message(*publish_message);
+				logger_print_separator();
+				printf("\n");
+			#else
+				(void) publish_message;
+			#endif
+		return;
+
+		case PINGREQ:
+			#if LOG_PINGREQ == TRUE
+				pingreq_message = (PingReqMessage *) message;
+				logger_print_separator();
+				dump_parsed_fixed_header(pingreq_message->header);
+				dump_parsed_pingreq_message(*pingreq_message);
+				logger_print_separator();
+				printf("\n");
+			#else
+				(void) pingreq_message;
+			#endif
+		return;
+
+		case SUBSCRIBE:
+			#if LOG_SUBSCRIBE == TRUE
+				subscribe_message = (SubscribeMessage *) message;
+				logger_print_separator();
+				dump_parsed_fixed_header(subscribe_message->header);
+				dump_parsed_subscribe_message(*subscribe_message);
+				dump_subscribe_message(*subscribe_message);
+				logger_print_separator();
+				printf("\n");
+			#else
+				(void) subscribe_message;
+			#endif
+		return;
+
+		case PUBACK:
+			#if LOG_PUBACK == TRUE
+				puback_message = (PubAckMessage *) message;
+				logger_print_separator();
+				dump_parsed_fixed_header(puback_message->header);
+				dump_parsed_puback_message(*puback_message);
+				dump_puback_message(*puback_message);
+				logger_print_separator();
+				printf("\n");
+			#else
+				(void) puback_message;
+			#endif
+		return;
+
+		case CONNACK:
+			#if LOG_CONNACK == TRUE
+				connack_message = (ConnackMessage *) message;
+				logger_print_separator();
+				dump_parsed_fixed_header(connack_message->header);
+				dump_parsed_connack_message(*connack_message);
+				logger_print_separator();
+				printf("\n");
+			#else
+				(void) connack_message;
+			#endif
+		return;
+
+		case SUBACK:
+			#if LOG_SUBACK == TRUE
+				suback_message = (SubAckMessage *) message;
+				logger_print_separator();
+				dump_parsed_fixed_header(suback_message->header);
+				dump_parsed_suback_message(*suback_message);
+				dump_suback_message(*suback_message);
+				logger_print_separator();
+				printf("\n");
+			#else
+				(void) suback_message;
+			#endif
+		return;
+
+		case PINGRESP:
+			#if LOG_PINGRESP == TRUE
+				pingresp_message = (PingRespMessage *) message;
+				logger_print_separator();
+				dump_parsed_fixed_header(pingresp_message->header);
+				dump_parsed_pingresp_message(*pingresp_message);
+				logger_print_separator();
+				printf("\n");
+			#else
+				(void) pingresp_message;
+			#endif
+
+		case PUBREC:
+		case PUBREL:
+		case PUBCOMP:
+		case UNSUBSCRIBE:
+		case UNSUBACK:
+		default:
+		return;
+	}
 }
 
 void log_publish_message_payload(PublishMessage publish_message)
@@ -322,76 +420,6 @@ void log_publish_message_payload(PublishMessage publish_message)
 	logger_log(temp);
 #else
 	(void) publish_message;
-#endif
-}
-
-
-
-void log_puback_message(PubAckMessage puback_message)
-{
-#if LOG_PUBACK == TRUE
-	logger_print_separator();
-	dump_parsed_fixed_header(puback_message.header);
-	dump_parsed_puback_message(puback_message);
-	dump_puback_message(puback_message);
-	logger_print_separator();
-	printf("\n");
-#else
-	(void) puback_message;
-#endif
-}
-
-void log_subscribe_message(SubscribeMessage subscribe_message)
-{
-#if LOG_SUBSCRIBE == TRUE
-	logger_print_separator();
-	dump_parsed_fixed_header(subscribe_message.header);
-	dump_parsed_subscribe_message(subscribe_message);
-	dump_subscribe_message(subscribe_message);
-	logger_print_separator();
-	printf("\n");
-#else
-	(void) subscribe_message;
-#endif
-}
-
-void log_suback_message(SubAckMessage suback_message)
-{
-#if LOG_SUBACK == TRUE
-	logger_print_separator();
-	dump_parsed_fixed_header(suback_message.header);
-	dump_parsed_suback_message(suback_message);
-	dump_suback_message(suback_message);
-	logger_print_separator();
-	printf("\n");
-#else
-	(void) suback_message;
-#endif
-}
-
-void log_pingreq_message(PingReqMessage pingreq_message)
-{
-#if LOG_PINGREQ == TRUE
-	logger_print_separator();
-	dump_parsed_fixed_header(pingreq_message.header);
-	dump_parsed_pingreq_message(pingreq_message);
-	logger_print_separator();
-	printf("\n");
-#else
-	(void) pingreq_message;
-#endif
-}
-
-void log_pingresp_message(PingRespMessage pingresp_message)
-{
-#if LOG_PINGRESP == TRUE
-	logger_print_separator();
-	dump_parsed_fixed_header(pingresp_message.header);
-	dump_parsed_pingresp_message(pingresp_message);
-	logger_print_separator();
-	printf("\n");
-#else
-	(void) pingresp_message;
 #endif
 }
 

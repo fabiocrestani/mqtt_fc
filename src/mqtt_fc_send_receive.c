@@ -35,7 +35,7 @@ uint8_t mqtt_send(void * message)
 			case CONNECT:
 				connect_message = (ConnectMessage *) message;
 				len = mqtt_pack_connect_message(*connect_message, buffer);
-				log_connect_message(*connect_message);
+				log_message((void *) connect_message);
 				tcp_send(buffer, len);
 			return TRUE;
 
@@ -43,29 +43,28 @@ uint8_t mqtt_send(void * message)
 			case PUBLISH:
 				publish_message = (PublishMessage *) message;
 				len = mqtt_pack_publish_message(*publish_message, buffer);
-				log_publish_message(*publish_message);
+				log_message((void *) publish_message);
 				tcp_send(buffer, len);
 			return TRUE;
 
 			case PINGREQ:
 				pingreq_message = (PingReqMessage *) message;
-				len = mqtt_pack_pingreq_message(*pingreq_message, 
-														buffer);
-				log_pingreq_message(*pingreq_message);
+				len = mqtt_pack_pingreq_message(*pingreq_message, buffer);
+				log_message((void *) pingreq_message);
 				tcp_send(buffer, len);
 			return TRUE;
 
 			case SUBSCRIBE:
 				subscribe_message = (SubscribeMessage *) message;
 				len = mqtt_pack_subscribe_message(*subscribe_message, buffer);
-				log_subscribe_message(*subscribe_message);
+				log_message((void *) subscribe_message);
 				tcp_send(buffer, len);
 			return TRUE;
 
 			case PUBACK:
 				puback_message = (PubAckMessage *) message;
 				len = mqtt_pack_puback_message(*puback_message, buffer);
-				//log_puback_message(*subscribe_message);
+				//log_message((void *) puback_message);
 				tcp_send(buffer, len);
 			return TRUE;
 

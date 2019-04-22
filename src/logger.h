@@ -35,16 +35,8 @@ void logger_log(char buffer[]);
 void dump(char *data, uint32_t len);
 
 // Log messages with a single function call
-void log_connect_message(ConnectMessage connect_message);
-void log_connack_message(ConnackMessage connack_message);
-void log_publish_message(PublishMessage message);
+void log_message(void * message);
 void log_publish_message_payload(PublishMessage publish_message);
-void log_puback_message(PubAckMessage puback_message);
-void log_subscribe_message(SubscribeMessage subscribe_message);
-void log_suback_message(SubAckMessage suback_message);
-void log_pingreq_message(PingReqMessage pingreq_message);
-void log_pingresp_message(PingRespMessage pingresp_message);
-void log_pingresp_message(PingRespMessage pingresp_message);
 
 // Translators
 const char * translate_message_type(MessageType message_type);
