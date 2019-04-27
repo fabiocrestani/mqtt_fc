@@ -189,7 +189,7 @@ uint8_t	mqtt_connect(char mqtt_protocol_name[], char mqtt_client_id[])
 	ConnectMessage connect_message = 
 			mqtt_build_connect_message(mqtt_protocol_name, mqtt_client_id);
 	mqtt_send((void *) &connect_message);
-	mqtt_receive_response();
+//	mqtt_receive_response();
 	return TRUE;
 }
 

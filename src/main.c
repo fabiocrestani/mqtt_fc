@@ -14,157 +14,51 @@
 #include <netinet/in.h>
 #include <netdb.h>
 
+#include "tcp_fsm.h"
 #include "mqtt_fc.h"
 #include "mqtt_fc_send_receive.h"
 #include "tcp.h"
 #include "logger.h"
 #include "utils.h"
 #include "timer.h"
-#include "fsm.h"
 
-char mqtt_tcp_server_address[] = "iot.eclipse.org";
+char mqtt_tcp_server_address[256] = "iot.eclipse.org";
 uint32_t mqtt_tcp_server_port_number = 1883;
 char temp[512];
 
-
-
-uint8_t callback_general_error(void)
-{
-	logger_log("General error. Restart client?");
-	
-	return FALSE;
-}
-
-uint8_t callback_tcp_connect_start(void)
-{
-	logger_log("Connecting to TCP server...");
-
-	if (!tcp_connect(mqtt_tcp_server_address, mqtt_tcp_server_port_number))
-	{
-		sprintf(temp, "[tcp] Error connecting to %s:%d", 
-						mqtt_tcp_server_address, mqtt_tcp_server_port_number);
-		logger_log(temp);
-		return FALSE;
-	}
-
-	sprintf(temp, "[tcp] TCP connected to %s:%d", mqtt_tcp_server_address,
-												 mqtt_tcp_server_port_number);
-	logger_log(temp);
-	return TRUE;
-}
-
-uint8_t callback_mqtt_connect_start(void)
-{
-	logger_log("Connecting to MQTT server...");
-	
-	return FALSE;
-}
-
 int main(int argc, char *argv[])
 {
-	(void) argc;
-	(void) argv;
 	printf("\n");
-
-	///////////////////////////////////////////////////////////////////////////
-	// Connect
-	///////////////////////////////////////////////////////////////////////////
-	/*logger_log("[mqtt] Sending CONNECT message");
-	char mqtt_protocol_name[] = "MQTT";
-	char mqtt_client_id[] = "fabio";
-
-	mqtt_connect(mqtt_protocol_name, mqtt_client_id);*/
-
-	///////////////////////////////////////////////////////////////////////////
-	// Start main timer for FSM
-	///////////////////////////////////////////////////////////////////////////
-	Fsm mqtt_fsm;
-
-	FsmState state_general_error;
-	state_general_error = fsm_state_build("general_error", 
-		0, *callback_general_error, 0);
-
-	state_general_error.next_false_state = &state_general_error;
-
-	FsmState state_mqtt_connect;
-	state_mqtt_connect = fsm_state_build("mqtt_connect",
-		*callback_mqtt_connect_start, 0, 0);
-
-	FsmState state_tcp_connect; 
-	state_tcp_connect = fsm_state_build("tcp_connect", 
-		*callback_tcp_connect_start, 0, 0);
-
-	state_tcp_connect.next_false_state = &state_general_error;
-	state_tcp_connect.next_true_state = &state_mqtt_connect;
-
-	fsm_init(&mqtt_fsm, &state_tcp_connect);
 	
+	if (argc > 1)
+	{
+		strcpy(mqtt_tcp_server_address, argv[1]);
+	}
+
+	if (argc > 2)
+	{
+		mqtt_tcp_server_port_number = atoi(argv[2]);
+	}
+
 	Timer timer_mqtt_fsm;
-	timer_init(&timer_mqtt_fsm, 1000*1000, 3);
+	timer_init(&timer_mqtt_fsm, 1000, 3);
 	timer_start(&timer_mqtt_fsm);
+
+	tcp_fsm_init(mqtt_tcp_server_address, mqtt_tcp_server_port_number);
+	tcp_fsm_set_connect();
 
 	while (1)
 	{
 		if (timer_reached(&timer_mqtt_fsm))
 		{
-			fsm_poll(&mqtt_fsm);
+			tcp_fsm_poll();
+			mqtt_fsm_poll();
 		}
 		usleep(1000*500);
 	}
 
-	///////////////////////////////////////////////////////////////////////////
-	// Publish
-	///////////////////////////////////////////////////////////////////////////
-	logger_log("[mqtt] Sending PUBLISH message");
-	char topic_to_publish[] = "abcd";
-	//char message_to_publish[] = "hello world :)";
-	char message_to_publish[] = "2";
+	return FALSE;
 
-	mqtt_publish(topic_to_publish, message_to_publish, E_QOS_PUBACK);
-
-	///////////////////////////////////////////////////////////////////////////
-	// Ping
-	///////////////////////////////////////////////////////////////////////////
-	logger_log("[mqtt] Sending PINGREQ message");
-	//mqtt_ping_request();
-	
-	///////////////////////////////////////////////////////////////////////////
-	// Subscribe
-	///////////////////////////////////////////////////////////////////////////
-	logger_log("[mqtt] Sending SUBSCRIBE");
-	char topic_name[] = "abcd";	
-	mqtt_subscribe(topic_name, 1);	
-
-	///////////////////////////////////////////////////////////////////////////
-	// Wait for remote PUBLISH messages
-	///////////////////////////////////////////////////////////////////////////
-	while (1)
-	{
-		PublishMessage received_message;		
-		if (mqtt_poll_publish_messages(&received_message))
-		{
-			//log_publish_message(received_message);
-			log_publish_message_payload(received_message);
-
-			// TODO Send ACK if QoS asks for
-			mqtt_send_response_to_publish_message(received_message);
-		}
-
-		sleep(1);	
-	}
-
-
-
-
-	// TODO implement mqtt disconnect
-	//if (tcp_disconnect())
-	//{
-	//	logger_log("[tcp] TCP disconnected");
-	//}
-	//else
-	//{
-	//	logger_log("[tcp] Error on TCP disconnection");
-	//}
 
     return 0;
 }
