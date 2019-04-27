@@ -22,18 +22,24 @@
 #include "timer.h"
 #include "fsm.h"
 
-int main(int argc, char *argv[])
+char mqtt_tcp_server_address[] = "iot.eclipse.org";
+uint32_t mqtt_tcp_server_port_number = 1883;
+char temp[512];
+
+
+
+uint8_t callback_general_error(void)
 {
-	(void) argc;
-	(void) argv;
+	logger_log("General error. Restart client?");
+	
+	return FALSE;
+}
 
-	char mqtt_tcp_server_address[] = "iot.eclipse.org";
-	uint32_t mqtt_tcp_server_port_number = 1883;
-	char temp[512];
+uint8_t callback_tcp_connect_start(void)
+{
+	logger_log("Connecting to TCP server...");
 
-	printf("\n");
-
-	if (!tcp_connect())
+	if (!tcp_connect(mqtt_tcp_server_address, mqtt_tcp_server_port_number))
 	{
 		sprintf(temp, "[tcp] Error connecting to %s:%d", 
 						mqtt_tcp_server_address, mqtt_tcp_server_port_number);
@@ -44,24 +50,54 @@ int main(int argc, char *argv[])
 	sprintf(temp, "[tcp] TCP connected to %s:%d", mqtt_tcp_server_address,
 												 mqtt_tcp_server_port_number);
 	logger_log(temp);
+	return TRUE;
+}
+
+uint8_t callback_mqtt_connect_start(void)
+{
+	logger_log("Connecting to MQTT server...");
+	
+	return FALSE;
+}
+
+int main(int argc, char *argv[])
+{
+	(void) argc;
+	(void) argv;
+	printf("\n");
 
 	///////////////////////////////////////////////////////////////////////////
 	// Connect
 	///////////////////////////////////////////////////////////////////////////
-	logger_log("[mqtt] Sending CONNECT message");
+	/*logger_log("[mqtt] Sending CONNECT message");
 	char mqtt_protocol_name[] = "MQTT";
 	char mqtt_client_id[] = "fabio";
 
-	mqtt_connect(mqtt_protocol_name, mqtt_client_id);
-
+	mqtt_connect(mqtt_protocol_name, mqtt_client_id);*/
 
 	///////////////////////////////////////////////////////////////////////////
 	// Start main timer for FSM
 	///////////////////////////////////////////////////////////////////////////
-	/*Fsm mqtt_fsm;
-	fsm_init(&mqtt_fsm);
+	Fsm mqtt_fsm;
+
+	FsmState state_general_error;
+	state_general_error = fsm_state_build("general_error", 
+		0, *callback_general_error, 0);
+
+	state_general_error.next_false_state = &state_general_error;
+
+	FsmState state_mqtt_connect;
+	state_mqtt_connect = fsm_state_build("mqtt_connect",
+		*callback_mqtt_connect_start, 0, 0);
+
 	FsmState state_tcp_connect; 
-	state_tcp_connect = fsm_state_build("tcp connect", *callback_tcp_connect);
+	state_tcp_connect = fsm_state_build("tcp_connect", 
+		*callback_tcp_connect_start, 0, 0);
+
+	state_tcp_connect.next_false_state = &state_general_error;
+	state_tcp_connect.next_true_state = &state_mqtt_connect;
+
+	fsm_init(&mqtt_fsm, &state_tcp_connect);
 	
 	Timer timer_mqtt_fsm;
 	timer_init(&timer_mqtt_fsm, 1000*1000, 3);
@@ -74,7 +110,7 @@ int main(int argc, char *argv[])
 			fsm_poll(&mqtt_fsm);
 		}
 		usleep(1000*500);
-	}	*/
+	}
 
 	///////////////////////////////////////////////////////////////////////////
 	// Publish

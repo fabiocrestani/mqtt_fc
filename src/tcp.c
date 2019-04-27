@@ -16,11 +16,11 @@
 #include "mqtt_fc.h"
 #include "logger.h"
 
-int sockfd, portno = 1883, n;
+int sockfd, n;
 struct sockaddr_in serv_addr;
 struct hostent *server;
 
-uint8_t tcp_connect()
+uint8_t tcp_connect(char server_address[], uint32_t server_port)
 {
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockfd < 0)
@@ -29,7 +29,7 @@ uint8_t tcp_connect()
 		return FALSE;
     }
 
-    server = gethostbyname("iot.eclipse.org");
+    server = gethostbyname(server_address);
 
     if (server == NULL)
     {
@@ -40,11 +40,12 @@ uint8_t tcp_connect()
     bzero((char *) &serv_addr, sizeof(serv_addr));
     serv_addr.sin_family = AF_INET;
     bcopy((char *)server->h_addr, (char *) &serv_addr.sin_addr.s_addr, server->h_length);
-    serv_addr.sin_port = htons(portno);
+    serv_addr.sin_port = htons(server_port);
     
 	if (connect(sockfd,(struct sockaddr *) &serv_addr,sizeof(serv_addr)) < 0)
     {
-        printf("ERROR connecting\n");
+        //printf("[tcp_connect] Error connecting to server %s:%d\n", 
+			//server_address, server_port);
 		return FALSE;
     }
 
