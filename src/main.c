@@ -20,10 +20,13 @@
 #include "logger.h"
 #include "utils.h"
 #include "timer.h"
+#include "circular_buffer.h"
 
 char mqtt_tcp_server_address[256] = "iot.eclipse.org";
 uint32_t mqtt_tcp_server_port_number = 1883;
 char temp[512];
+
+CircularBuffer mqtt_rx_buffer;
 
 static uint8_t tcp_server_connect(void)
 {
@@ -59,11 +62,15 @@ int main(int argc, char *argv[])
 		mqtt_tcp_server_port_number = atoi(argv[2]);
 	}
 
+	mqtt_set_circular_buffer(&mqtt_rx_buffer);
+
 	Timer timer_mqtt_fsm;
 	timer_init(&timer_mqtt_fsm, 1000, 3);
 	timer_start(&timer_mqtt_fsm);
 
 	tcp_server_connect();
+	tcp_set_circular_buffer(&mqtt_rx_buffer);
+	tcp_set_socket_non_blocking();
 
 	///////////////////////////////////////////////////////////////////////////
 	// Connect
@@ -72,7 +79,19 @@ int main(int argc, char *argv[])
 	char mqtt_protocol_name[] = "MQTT";
 	char mqtt_client_id[] = "fabio";
 	mqtt_connect(mqtt_protocol_name, mqtt_client_id);
-	mqtt_receive_response();
+
+	while (1)
+	{
+		tcp_poll();
+
+		mqtt_poll();
+	
+		usleep(1000*1000);
+	}
+
+
+/*	mqtt_receive_response();
+
 
 	///////////////////////////////////////////////////////////////////////////
 	// Publish
@@ -138,6 +157,7 @@ int main(int argc, char *argv[])
 
 		usleep(100*1000);	
 	}
+*/
 
     return 0;
 }

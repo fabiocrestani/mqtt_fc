@@ -15,6 +15,8 @@
 #include "logger.h"
 #include "utils.h"
 
+CircularBuffer *circular_buffer;
+
 uint8_t mqtt_send(void * message)
 {
 	FixedHeader *header = (FixedHeader *) message;
@@ -87,30 +89,6 @@ uint8_t mqtt_send(void * message)
 	return FALSE;
 }
 
-uint8_t mqtt_poll_receive(char *buffer, uint32_t *len)
-{
-	if (buffer == NULL)
-	{
-		return FALSE;
-	}
-
-	tcp_receive(buffer, len);
-
-	return TRUE;
-}
-
-uint8_t mqtt_receive_response(void)
-{
-	char buffer[1024];
-	unsigned int len = 0;
-
-	tcp_receive(buffer, &len);
-
-	mqtt_handle_received_message(buffer, len);
-
-	return TRUE;
-}
-
 uint8_t mqtt_handle_received_message(char *buffer, uint32_t len)
 {
 	FixedHeader header;
@@ -154,7 +132,26 @@ uint8_t mqtt_handle_received_message(char *buffer, uint32_t len)
 }
 
 
+void mqtt_set_circular_buffer(CircularBuffer *ptr_buffer)
+{
+	circular_buffer = ptr_buffer;
+}
 
+void mqtt_poll(void)
+{
+	char buffer[256];
+	uint32_t len = 0;
+		
+	if (buffer_is_empty(circular_buffer))
+	{
+		return;
+	}
 
+	len = buffer_pop_array(circular_buffer, buffer);
 
+	if (len > 0)
+	{
+		mqtt_handle_received_message(buffer, len);
+	}
+}
 

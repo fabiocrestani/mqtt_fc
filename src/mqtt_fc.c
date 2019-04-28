@@ -320,7 +320,9 @@ uint8_t mqtt_handle_received_suback(char *buffer, uint32_t len)
 ///////////////////////////////////////////////////////////////////////////////
 uint8_t mqtt_poll_publish_messages(PublishMessage *received_message)
 {
-	char buffer[1024];
+	(void) received_message;
+	// FIXME
+	/*char buffer[1024];
 	uint32_t len;
 	FixedHeader header;
 
@@ -334,6 +336,7 @@ uint8_t mqtt_poll_publish_messages(PublishMessage *received_message)
 			return TRUE;	
 		}
 	}
+	*/
 
 	return FALSE;
 }

@@ -16,10 +16,13 @@
 
 #include "mqtt_fc.h"
 #include "logger.h"
+#include "circular_buffer.h"
 
 int sockfd, n;
 struct sockaddr_in serv_addr;
 struct hostent *server;
+
+CircularBuffer *circular_buffer;
 
 uint8_t tcp_connect(char server_address[], uint32_t server_port)
 {
@@ -51,6 +54,11 @@ uint8_t tcp_connect(char server_address[], uint32_t server_port)
     }
 
 	return TRUE;
+}
+
+void tcp_set_circular_buffer(CircularBuffer *ptr_buffer)
+{
+	circular_buffer = ptr_buffer;
 }
 
 void tcp_set_socket_non_blocking(void)
@@ -88,3 +96,30 @@ uint8_t tcp_receive(char buffer[], uint32_t *len)
 
     return TRUE;
 }
+
+void tcp_poll_rx(void)
+{
+	char buffer[256];
+	int len = 0;
+
+	if (circular_buffer == NULL)
+	{
+		return;
+	}
+
+	do {
+		len = read(sockfd, buffer, 255);
+
+		if (len > 0)
+		{
+			buffer_put_array(circular_buffer, buffer, len);
+		}
+
+	} while (len > 0);
+}
+
+void tcp_poll(void)
+{
+	tcp_poll_rx();
+}
+
