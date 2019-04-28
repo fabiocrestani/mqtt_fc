@@ -189,7 +189,6 @@ uint8_t	mqtt_connect(char mqtt_protocol_name[], char mqtt_client_id[])
 	ConnectMessage connect_message = 
 			mqtt_build_connect_message(mqtt_protocol_name, mqtt_client_id);
 	mqtt_send((void *) &connect_message);
-//	mqtt_receive_response();
 	return TRUE;
 }
 
@@ -209,7 +208,6 @@ uint8_t mqtt_publish(char topic_to_publish[], char message_to_publish[],
 						mqtt_get_new_message_id(), message_to_publish, 
 						strlen(message_to_publish), qos);
 	mqtt_send((void *) &publish_message);
-	mqtt_receive_response();
 	return TRUE;
 }
 
@@ -220,7 +218,6 @@ uint8_t mqtt_ping_request(void)
 	PingReqMessage ping_message;
 	ping_message = mqtt_build_ping_message();
 	mqtt_send((void *) &ping_message);
-	mqtt_receive_response();
 	return TRUE;
 }
 
@@ -235,7 +232,6 @@ uint8_t mqtt_subscribe(char topic_to_subscribe[], uint8_t requested_qos)
 	subscribe_message = mqtt_build_subscribe_message(topic_to_subscribe,
 							mqtt_get_new_message_id(), requested_qos);
 	mqtt_send((void *) &subscribe_message);
-	mqtt_receive_response();
 	return TRUE;
 }
 

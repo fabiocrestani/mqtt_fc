@@ -12,6 +12,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netdb.h>
+#include <fcntl.h>
 
 #include "mqtt_fc.h"
 #include "logger.h"
@@ -52,6 +53,11 @@ uint8_t tcp_connect(char server_address[], uint32_t server_port)
 	return TRUE;
 }
 
+void tcp_set_socket_non_blocking(void)
+{
+	fcntl(sockfd, F_SETFL, fcntl(sockfd, F_GETFL, 0) | O_NONBLOCK);
+}
+
 uint8_t tcp_disconnect()
 {
 	int ret = shutdown(sockfd, 2);
@@ -76,7 +82,7 @@ uint8_t tcp_receive(char buffer[], uint32_t *len)
     int n = read(sockfd, buffer, 255);
     if (n < 0)
     {
-        printf("ERROR reading from socket\n");
+        //printf("ERROR reading from socket\n");
 		return FALSE;
     }
 
