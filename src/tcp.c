@@ -79,14 +79,12 @@ uint8_t tcp_send(char buffer[], uint32_t len)
 
 uint8_t tcp_receive(char buffer[], uint32_t *len)
 {
-    int n = read(sockfd, buffer, 255);
-    if (n < 0)
+    *len = read(sockfd, buffer, 255);
+    if (*len <= 0)
     {
         //printf("ERROR reading from socket\n");
 		return FALSE;
     }
-
-	*len = n;
 
     return TRUE;
 }
