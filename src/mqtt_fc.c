@@ -24,7 +24,7 @@
 #include "logger.h"
 #include "utils.h"
 
-Mqtt global_mqtt;
+Mqtt lc_mqtt;
 
 Timer timer_mqtt_fsm;
 
@@ -41,17 +41,18 @@ uint16_t mqtt_get_new_message_id(void)
 	return message_id_counter++;
 }
 
-void mqtt_init(Mqtt *mqtt)
+void mqtt_init(void)
 {
 	char default_server_address[256] = "iot.eclipse.org";
 	uint32_t default_server_port = 1883;
 
-	mqtt->connected = FALSE;
-	strcpy(mqtt->server_address, default_server_address);
-	mqtt->server_port = default_server_port;
+	lc_mqtt.connected = FALSE;
+	strcpy(lc_mqtt.server_address, default_server_address);
+	lc_mqtt.server_port = default_server_port;
 
-	mqtt->state = E_MQTT_STATE_IDLE;
-	mqtt->substate = E_MQTT_SUBSTATE_SEND;
+	lc_mqtt.state = E_MQTT_STATE_IDLE;
+	lc_mqtt.substate = E_MQTT_SUBSTATE_SEND;
+	lc_mqtt.retries = 0;
 }
 
 void mqtt_start(Mqtt *mqtt)
@@ -59,6 +60,10 @@ void mqtt_start(Mqtt *mqtt)
 	mqtt_fsm_set_state(mqtt, E_MQTT_STATE_TCP_CONNECT);
 }
 
+Mqtt * mqtt_get_instance(void)
+{
+	return &lc_mqtt;
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 // Command handlers
@@ -130,7 +135,7 @@ uint8_t mqtt_handle_received_connack(char *buffer, uint32_t len)
 	if (mqtt_unpack_connack_message(buffer, len, &connack_message))
 	{
 		log_message(&connack_message);
-		global_mqtt.connected = TRUE;
+		lc_mqtt.connected = TRUE;
 		return TRUE;
 	}
 	else 

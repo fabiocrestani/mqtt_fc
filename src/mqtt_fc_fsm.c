@@ -129,6 +129,7 @@ void mqtt_state_tcp_connect(Mqtt *mqtt)
 		}
 		else
 		{
+			// TODO add retries counter
 			mqtt_fsm_set_error_state(E_MQTT_STATE_TCP_CONNECT);
 		}
 	}
@@ -152,11 +153,12 @@ void mqtt_state_connect(Mqtt *mqtt)
 	{
 		if (mqtt->connected)
 		{
-			logger_log("Connected!");
+			logger_log("[mqtt] Connected");
 		}
 		else
 		{
-			logger_log("Waiting response from connect");
+			// TODO add retries counter
+			logger_log("[mqtt] Waiting response from connect");
 		}
 	}	
 }

@@ -30,16 +30,17 @@ CircularBuffer mqtt_rx_buffer;
 int main(int argc, char *argv[])
 {
 	printf("\n");
-	mqtt_init(&global_mqtt);
+	mqtt_init();
+	Mqtt *mqtt = mqtt_get_instance();
 	
 	if (argc > 1)
 	{
-		mqtt_tcp_connect_set_server_address(&global_mqtt, argv[1]);
+		mqtt_tcp_connect_set_server_address(mqtt, argv[1]);
 	}
 
 	if (argc > 2)
 	{
-		mqtt_tcp_connect_set_server_port(&global_mqtt, atoi(argv[2]));
+		mqtt_tcp_connect_set_server_port(mqtt, atoi(argv[2]));
 	}
 
 	timer_init(&timer_mqtt_fsm, TIMER_PERIOD_1_MS, 1000);
@@ -48,14 +49,14 @@ int main(int argc, char *argv[])
 	tcp_set_circular_buffer(&mqtt_rx_buffer);
 	tcp_set_socket_non_blocking();
 
-	mqtt_set_circular_buffer(&global_mqtt, &mqtt_rx_buffer);
-	mqtt_start(&global_mqtt);
+	mqtt_set_circular_buffer(mqtt, &mqtt_rx_buffer);
+	mqtt_start(mqtt);
 
 	while (1)
 	{
 		tcp_poll();
 
-		mqtt_poll(&global_mqtt);
+		mqtt_poll(mqtt);
 
 	
 		//usleep(1000*1000);

@@ -14,8 +14,6 @@
 #include "timer.h"
 #include "mqtt_fc_fsm.h"
 
-extern Mqtt global_mqtt;
-
 extern Timer timer_mqtt_fsm;
 
 #define TRUE (1)
@@ -81,16 +79,20 @@ typedef enum EConnakReturnCode_ {
 // STRUCTS
 ///////////////////////////////////////////////////////////////////////////////
 typedef struct Mqtt_ {
+	// Buffer	
 	CircularBuffer *circular_buffer;
 
-	EMqttState state;
-	EMqttSubstate substate;
-
-	uint8_t connected;
-
+	// Server address and port
 	char server_address[512];
 	uint32_t server_port;
 
+	// State machine
+	EMqttState state;
+	EMqttSubstate substate;
+	uint32_t retries;
+	
+	// Flags
+	uint8_t connected;
 
 } Mqtt;
 
@@ -304,8 +306,9 @@ typedef struct DisconnectMessage_ {
 // FUNCTIONS
 ///////////////////////////////////////////////////////////////////////////////
 void error(char *msg);
-void mqtt_init(Mqtt *mqtt);
+void mqtt_init(void);
 void mqtt_start(Mqtt *mqtt);
+Mqtt * mqtt_get_instance(void);
 
 // Commands
 uint8_t	mqtt_connect(char mqtt_protocol_name[], char mqtt_client_id[]);
