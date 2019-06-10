@@ -11,6 +11,10 @@
 #include <unistd.h>
 #include <string.h>
 
+#include "timer.h"
+
+extern Timer timer_mqtt_fsm;
+
 #define TRUE (1)
 #define FALSE (0)
 
@@ -73,6 +77,7 @@ typedef enum {
 ///////////////////////////////////////////////////////////////////////////////
 // STRUCTS
 ///////////////////////////////////////////////////////////////////////////////
+
 typedef struct FixedHeader_ {
 	union {
 		uint8_t byte1;
@@ -283,6 +288,8 @@ typedef struct DisconnectMessage_ {
 // FUNCTIONS
 ///////////////////////////////////////////////////////////////////////////////
 void error(char *msg);
+
+void mqtt_start(void);
 
 // Commands
 uint8_t	mqtt_connect(char mqtt_protocol_name[], char mqtt_client_id[]);

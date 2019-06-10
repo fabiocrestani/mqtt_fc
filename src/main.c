@@ -16,37 +16,17 @@
 
 #include "mqtt_fc.h"
 #include "mqtt_fc_send_receive.h"
+#include "mqtt_fc_tcp_connect.h"
 #include "tcp.h"
+#include "timer.h"
 #include "logger.h"
 #include "utils.h"
-#include "timer.h"
 #include "circular_buffer.h"
 
-char mqtt_tcp_server_address[256] = "iot.eclipse.org";
-uint32_t mqtt_tcp_server_port_number = 1883;
 char temp[512];
 
+
 CircularBuffer mqtt_rx_buffer;
-
-static uint8_t tcp_server_connect(void)
-{
-	char temp[256];
-
-	logger_log("Connecting to TCP server...");
-
-	if (!tcp_connect(mqtt_tcp_server_address, mqtt_tcp_server_port_number))
-	{
-		sprintf(temp, "[tcp] Error connecting to %s:%d", 
-						mqtt_tcp_server_address, mqtt_tcp_server_port_number);
-		logger_log(temp);
-		return FALSE;
-	}
-
-	sprintf(temp, "[tcp] Connected to %s:%d", mqtt_tcp_server_address,
-												 mqtt_tcp_server_port_number);
-	logger_log(temp);
-	return TRUE;
-}
 
 int main(int argc, char *argv[])
 {
@@ -54,39 +34,31 @@ int main(int argc, char *argv[])
 	
 	if (argc > 1)
 	{
-		strcpy(mqtt_tcp_server_address, argv[1]);
+		mqtt_tcp_connect_set_server_address(argv[1]);
 	}
 
 	if (argc > 2)
 	{
-		mqtt_tcp_server_port_number = atoi(argv[2]);
+		mqtt_tcp_connect_set_server_port(atoi(argv[2]));
 	}
 
-	mqtt_set_circular_buffer(&mqtt_rx_buffer);
-
-	Timer timer_mqtt_fsm;
-	timer_init(&timer_mqtt_fsm, 1000, 3);
+	timer_init(&timer_mqtt_fsm, TIMER_PERIOD_1_MS, 1000);
 	timer_start(&timer_mqtt_fsm);
 
-	tcp_server_connect();
 	tcp_set_circular_buffer(&mqtt_rx_buffer);
 	tcp_set_socket_non_blocking();
 
-	///////////////////////////////////////////////////////////////////////////
-	// Connect
-	///////////////////////////////////////////////////////////////////////////
-	logger_log("[mqtt] Sending CONNECT message");
-	char mqtt_protocol_name[] = "MQTT";
-	char mqtt_client_id[] = "fabio";
-	mqtt_connect(mqtt_protocol_name, mqtt_client_id);
+	mqtt_set_circular_buffer(&mqtt_rx_buffer);
+	mqtt_start();
 
 	while (1)
 	{
 		tcp_poll();
 
 		mqtt_poll();
+
 	
-		usleep(1000*1000);
+		//usleep(1000*1000);
 	}
 
 

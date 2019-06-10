@@ -61,8 +61,10 @@ void *timer_thread_handler(void *args)
 
 	while (1)
 	{
-		//printf("Thread running... Timer %d Period: %d us Counter: %d / %d\n",
-			//timer->id, timer->period_us, timer->counter, timer->counter_max);
+#ifdef LOG_TIMER_PROGRESS
+		printf("Thread running... Timer %d Period: %d us Counter: %d / %d\n",
+			timer->id, timer->period_us, timer->counter, timer->counter_max);
+#endif
 		usleep(timer->period_us);
 		(timer->counter)++;
 	}
@@ -81,3 +83,9 @@ uint8_t timer_reached(Timer *timer)
 
 	return FALSE;
 }
+
+uint32_t timer_get_current_tick(Timer *timer)
+{
+	return timer->counter;
+}
+

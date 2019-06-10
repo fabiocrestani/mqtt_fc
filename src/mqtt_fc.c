@@ -19,9 +19,12 @@
 #include "mqtt_fc_unpack.h"
 #include "mqtt_fc_build.h"
 #include "mqtt_fc_send_receive.h"
+#include "mqtt_fc_fsm.h"
 #include "tcp.h"
 #include "logger.h"
 #include "utils.h"
+
+Timer timer_mqtt_fsm;
 
 static uint16_t message_id_counter = 1;
 
@@ -221,7 +224,10 @@ uint8_t	mqtt_send_response_to_publish_message(PublishMessage publish_message)
 	}
 }
 
-
+void mqtt_start(void)
+{
+	mqtt_fsm_set_state(E_MQTT_STATE_TCP_CONNECT);
+}
 
 
 

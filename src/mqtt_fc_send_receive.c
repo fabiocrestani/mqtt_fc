@@ -14,6 +14,7 @@
 #include "mqtt_fc_pack.h"
 #include "mqtt_fc_unpack.h"
 #include "mqtt_fc_build.h"
+#include "mqtt_fc_fsm.h"
 #include "tcp.h"
 #include "logger.h"
 #include "utils.h"
@@ -155,11 +156,6 @@ void mqtt_rx_poll(void)
 	{
 		mqtt_handle_received_message(buffer, len);
 	}
-
-}
-
-void mqtt_fsm_poll(void)
-{
 
 }
 

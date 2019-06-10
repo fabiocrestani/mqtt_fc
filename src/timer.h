@@ -4,7 +4,7 @@
  */
 
 #ifndef __TIMER_H__
-#define __ TIMER_H__
+#define __TIMER_H__
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -15,6 +15,12 @@
 #define TRUE (1)
 #define FALSE (0)
 #define TIMER_MIN_PERIOD_US (10)
+
+#define TIMER_PERIOD_1_US (1)
+#define TIMER_PERIOD_1_MS (1000)
+#define TIMER_PERIOD_1_S  (1000000)
+
+#define LOG_TIMER_PROGRESS
 
 typedef struct Timer_
 {
@@ -28,6 +34,7 @@ typedef struct Timer_
 uint8_t timer_init(Timer *timer, uint32_t period_us, uint32_t counter_max);
 uint8_t timer_start(Timer *timer);
 uint8_t timer_reached(Timer *timer);
+uint32_t timer_get_current_tick(Timer *timer);
 
 #endif // __TIMER_H__
 
