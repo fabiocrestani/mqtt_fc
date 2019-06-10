@@ -12,9 +12,9 @@
 #include <string.h>
 #include <stdint.h>
 
-void mqtt_tcp_connect_set_server_address(char * address);
-void mqtt_tcp_connect_set_server_port(uint32_t port);
+void mqtt_tcp_connect_set_server_address(Mqtt *mqtt, char * address);
+void mqtt_tcp_connect_set_server_port(Mqtt *mqtt, uint32_t port);
 
-uint8_t mqtt_tcp_server_connect(void);
+uint8_t mqtt_tcp_server_connect(Mqtt *mqtt);
 
 #endif // __MQTT_TCP_CONNECT_H__

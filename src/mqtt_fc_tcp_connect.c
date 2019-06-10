@@ -23,38 +23,34 @@
 #include "utils.h"
 #include "circular_buffer.h"
 
-char mqtt_tcp_server_address[256] = "iot.eclipse.org";
-uint32_t mqtt_tcp_server_port_number = 1883;
-char temp[512];
-
-void mqtt_tcp_connect_set_server_address(char * address)
+void mqtt_tcp_connect_set_server_address(Mqtt *mqtt, char * address)
 {
-	strcpy(mqtt_tcp_server_address, address);
+	strcpy(mqtt->server_address, address);
 }
 
-void mqtt_tcp_connect_set_server_port(uint32_t port)
+void mqtt_tcp_connect_set_server_port(Mqtt *mqtt, uint32_t port)
 {
-	mqtt_tcp_server_port_number = port;
+	mqtt->server_port = port;
 }
 
-uint8_t mqtt_tcp_server_connect(void)
+uint8_t mqtt_tcp_server_connect(Mqtt *mqtt)
 {
 	char temp[256];
 
 	logger_log("Connecting to TCP server...");
 
-	if (!tcp_connect(mqtt_tcp_server_address, mqtt_tcp_server_port_number))
+	if (!tcp_connect(mqtt->server_address, mqtt->server_port))
 	{
 		sprintf(temp, "[tcp] Error connecting to %s:%d", 
-						mqtt_tcp_server_address, mqtt_tcp_server_port_number);
+						mqtt->server_address, mqtt->server_port);
 		logger_log(temp);
 		return FALSE;
 	}
 
 	tcp_set_socket_non_blocking();
 
-	sprintf(temp, "[tcp] Connected to %s:%d", mqtt_tcp_server_address,
-												 mqtt_tcp_server_port_number);
+	sprintf(temp, "[tcp] Connected to %s:%d", mqtt->server_address,
+												 mqtt->server_port);
 	logger_log(temp);
 	return TRUE;
 }

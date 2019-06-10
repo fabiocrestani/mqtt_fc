@@ -12,6 +12,7 @@
 #include <string.h>
 
 #include "timer.h"
+#include "mqtt_fc_fsm.h"
 
 extern Timer timer_mqtt_fsm;
 
@@ -41,7 +42,7 @@ extern Timer timer_mqtt_fsm;
 ///////////////////////////////////////////////////////////////////////////////
 // ENUMS
 ///////////////////////////////////////////////////////////////////////////////
-typedef enum MessageType_ {
+typedef enum EMessageType_ {
 	CONNECT = 0x1,
 	CONNACK = 0x2,
 	PUBLISH = 0x3,
@@ -57,7 +58,7 @@ typedef enum MessageType_ {
 	PINGRESP = 0xD,
 	DISCONNECT = 0xE,
 	MESSAGE_TYPE_COUNT
-} MessageType;
+} EMessageType;
 
 typedef enum EQosLevel_ {
 	E_QOS_NONE = 0,
@@ -65,7 +66,7 @@ typedef enum EQosLevel_ {
 	E_QOS_PUBREC = 2
 } EQosLevel;
 
-typedef enum {
+typedef enum EConnakReturnCode_ {
 	E_CONNACK_CONNECTION_ACCEPTED = 0x0,
 	E_CONNACK_UNACCEPTABLE_PROTOCOL_VERSION = 0x01,
 	E_CONNACK_IDENTIFIER_REJECTED = 0x02,
@@ -77,6 +78,19 @@ typedef enum {
 ///////////////////////////////////////////////////////////////////////////////
 // STRUCTS
 ///////////////////////////////////////////////////////////////////////////////
+typedef struct Mqtt_ {
+	CircularBuffer *circular_buffer;
+
+	EMqttState state;
+	EMqttSubstate substate;
+
+	uint8_t connected;
+
+	char server_address[512];
+	uint32_t server_port;
+
+
+} Mqtt;
 
 typedef struct FixedHeader_ {
 	union {
@@ -288,8 +302,8 @@ typedef struct DisconnectMessage_ {
 // FUNCTIONS
 ///////////////////////////////////////////////////////////////////////////////
 void error(char *msg);
-
-void mqtt_start(void);
+void mqtt_init(Mqtt *mqtt);
+void mqtt_start(Mqtt *mqtt);
 
 // Commands
 uint8_t	mqtt_connect(char mqtt_protocol_name[], char mqtt_client_id[]);

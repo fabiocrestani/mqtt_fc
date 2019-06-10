@@ -39,6 +39,25 @@ uint16_t mqtt_get_new_message_id(void)
 	return message_id_counter++;
 }
 
+void mqtt_init(Mqtt *mqtt)
+{
+	char default_server_address[256] = "iot.eclipse.org";
+	uint32_t default_server_port = 1883;
+
+	mqtt->connected = FALSE;
+	strcpy(mqtt->server_address, default_server_address);
+	mqtt->server_port = default_server_port;
+
+	mqtt->state = E_MQTT_STATE_IDLE;
+	mqtt->substate = E_MQTT_SUBSTATE_SEND;
+}
+
+void mqtt_start(Mqtt *mqtt)
+{
+	mqtt_fsm_set_state(mqtt, E_MQTT_STATE_TCP_CONNECT);
+}
+
+
 ///////////////////////////////////////////////////////////////////////////////
 // Command handlers
 ///////////////////////////////////////////////////////////////////////////////
@@ -223,11 +242,4 @@ uint8_t	mqtt_send_response_to_publish_message(PublishMessage publish_message)
 		return TRUE;
 	}
 }
-
-void mqtt_start(void)
-{
-	mqtt_fsm_set_state(E_MQTT_STATE_TCP_CONNECT);
-}
-
-
 

@@ -20,8 +20,6 @@
 #define TIMER_PERIOD_1_MS (1000)
 #define TIMER_PERIOD_1_S  (1000000)
 
-#define LOG_TIMER_PROGRESS
-
 typedef struct Timer_
 {
 	pthread_t thread;

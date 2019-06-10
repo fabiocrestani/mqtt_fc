@@ -11,8 +11,8 @@
 #include "logger.h"
 #include "utils.h"
 
-void mqtt_poll();
-void mqtt_set_circular_buffer(CircularBuffer *ptr_buffer);
+void mqtt_poll(Mqtt *mqtt);
+void mqtt_set_circular_buffer(Mqtt *mqtt, CircularBuffer *ptr_buffer);
 
 uint8_t mqtt_send(void * message);
 

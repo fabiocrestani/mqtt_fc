@@ -20,22 +20,20 @@
 #include "logger.h"
 #include "utils.h"
 
-static EnumMqttState state = E_MQTT_STATE_IDLE;
-static EnumMqttSubState substate = E_MQTT_SUBSTATE_SEND;
 
-char * mqtt_fsm_translate_state(EnumMqttState state);
+char * mqtt_fsm_translate_state(EMqttState state);
 
-void mqtt_state_idle(void);
-void mqtt_state_tcp_connect(void);
-void mqtt_state_connect(void);
+void mqtt_state_idle(Mqtt *mqtt);
+void mqtt_state_tcp_connect(Mqtt *mqtt);
+void mqtt_state_connect(Mqtt *mqtt);
 
-void mqtt_fsm_set_state(EnumMqttState new_state)
+void mqtt_fsm_set_state(Mqtt *mqtt, EMqttState new_state)
 {
-	state = new_state;
-	substate = E_MQTT_SUBSTATE_SEND; 
+	mqtt->state = new_state;
+	mqtt->substate = E_MQTT_SUBSTATE_SEND; 
 }
 
-void mqtt_fsm_set_error_state(EnumMqttState origin)
+void mqtt_fsm_set_error_state(EMqttState origin)
 {
 	char temp[512];
 	sprintf(temp , "FATAL ERROR! Error in MQTT state %s (%d)", 
@@ -44,7 +42,7 @@ void mqtt_fsm_set_error_state(EnumMqttState origin)
 	exit(1);
 }
 
-char * mqtt_fsm_translate_state(EnumMqttState state)
+char * mqtt_fsm_translate_state(EMqttState state)
 {
 	switch (state)
 	{
@@ -60,7 +58,17 @@ char * mqtt_fsm_translate_state(EnumMqttState state)
 	}
 }
 
-void mqtt_fsm_poll(void)
+char * mqtt_fsm_translate_substate(EMqttSubstate substate)
+{
+	switch (substate)
+	{
+		case E_MQTT_SUBSTATE_SEND: return "E_MQTT_SUBSTATE_SEND";
+		case E_MQTT_SUBSTATE_WAIT: return "E_MQTT_SUBSTATE_WAIT";
+		default: return "?";
+	}
+}
+
+void mqtt_fsm_poll(Mqtt *mqtt)
 {
 	char temp[512];
 
@@ -69,11 +77,18 @@ void mqtt_fsm_poll(void)
 		return;
 	}
 
-	switch (state)
+#ifdef LOG_MQTT_FSM_POLL
+	sprintf(temp, "State %s (%d), Substate: %s (%d)", 
+		mqtt_fsm_translate_state(mqtt->state), mqtt->state,
+		mqtt_fsm_translate_substate(mqtt->substate), mqtt->substate);
+	logger_log(temp);
+#endif
+
+	switch (mqtt->state)
 	{
-		case E_MQTT_STATE_IDLE: mqtt_state_idle(); break;
-		case E_MQTT_STATE_TCP_CONNECT: mqtt_state_tcp_connect(); break;
-		case E_MQTT_STATE_CONNECT: mqtt_state_connect(); break;
+		case E_MQTT_STATE_IDLE: mqtt_state_idle(mqtt); break;
+		case E_MQTT_STATE_TCP_CONNECT: mqtt_state_tcp_connect(mqtt); break;
+		case E_MQTT_STATE_CONNECT: mqtt_state_connect(mqtt); break;
 
 		case E_MQTT_STATE_ERROR:
 		case E_MQTT_STATE_SUBSCRIBE:
@@ -81,19 +96,19 @@ void mqtt_fsm_poll(void)
 		case E_MQTT_STATE_POOL_REMOTE_DATA:
 		case E_MQTT_STATE_PING:
 		default:
-			sprintf(temp, "Invalid state: %d", state);
+			sprintf(temp, "Invalid state: %d", mqtt->state);
 			logger_log(temp);
 	}
 }
 
-void mqtt_state_idle(void)
+void mqtt_state_idle(Mqtt *mqtt)
 {
-	if (substate == E_MQTT_SUBSTATE_SEND)
+	if (mqtt->substate == E_MQTT_SUBSTATE_SEND)
 	{
 		logger_log("MQTT is waiting to start");
-		substate = E_MQTT_SUBSTATE_WAIT;
+		mqtt->substate = E_MQTT_SUBSTATE_WAIT;
 	} 
-	else if (substate == E_MQTT_SUBSTATE_WAIT)
+	else if (mqtt->substate == E_MQTT_SUBSTATE_WAIT)
 	{
 	}	
 }
@@ -101,13 +116,13 @@ void mqtt_state_idle(void)
 ///////////////////////////////////////////////////////////////////////////
 // TCP Connect
 ///////////////////////////////////////////////////////////////////////////
-void mqtt_state_tcp_connect(void)
+void mqtt_state_tcp_connect(Mqtt *mqtt)
 {
-	if (substate == E_MQTT_SUBSTATE_SEND)
+	if (mqtt->substate == E_MQTT_SUBSTATE_SEND)
 	{
-		if (mqtt_tcp_server_connect())
+		if (mqtt_tcp_server_connect(mqtt))
 		{
-			mqtt_fsm_set_state(E_MQTT_STATE_CONNECT);
+			mqtt_fsm_set_state(mqtt, E_MQTT_STATE_CONNECT);
 		}
 		else
 		{
@@ -119,18 +134,18 @@ void mqtt_state_tcp_connect(void)
 ///////////////////////////////////////////////////////////////////////////
 // Connect
 ///////////////////////////////////////////////////////////////////////////
-void mqtt_state_connect(void)
+void mqtt_state_connect(Mqtt *mqtt)
 {
-	if (substate == E_MQTT_SUBSTATE_SEND)
+	if (mqtt->substate == E_MQTT_SUBSTATE_SEND)
 	{
 		logger_log("[mqtt] Sending CONNECT message");
 		char mqtt_protocol_name[] = "MQTT";
 		char mqtt_client_id[] = "fabio";
 		mqtt_connect(mqtt_protocol_name, mqtt_client_id);
 
-		substate = E_MQTT_SUBSTATE_WAIT;
+		mqtt->substate = E_MQTT_SUBSTATE_WAIT;
 	} 
-	else if (substate == E_MQTT_SUBSTATE_WAIT)
+	else if (mqtt->substate == E_MQTT_SUBSTATE_WAIT)
 	{
 		logger_log("Waiting response from connect");
 	}	

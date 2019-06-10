@@ -11,7 +11,9 @@
 #include "logger.h"
 #include "utils.h"
 
-typedef enum EnumMqttState_ {
+typedef struct Mqtt_ Mqtt;
+
+typedef enum EMqttState_ {
 	E_MQTT_STATE_IDLE,
 	E_MQTT_STATE_TCP_CONNECT,
 	E_MQTT_STATE_CONNECT,
@@ -20,14 +22,14 @@ typedef enum EnumMqttState_ {
 	E_MQTT_STATE_POOL_LOCAL_DATA,
 	E_MQTT_STATE_POOL_REMOTE_DATA,
 	E_MQTT_STATE_PING,
-} EnumMqttState;
+} EMqttState;
 
-typedef enum EnumMqttSubState_ {
+typedef enum EMqttSubState_ {
 	E_MQTT_SUBSTATE_SEND,
 	E_MQTT_SUBSTATE_WAIT
-} EnumMqttSubState;
+} EMqttSubstate;
 
-void mqtt_fsm_set_state(EnumMqttState new_state);
-void mqtt_fsm_poll(void);
+void mqtt_fsm_set_state(Mqtt *mqtt, EMqttState new_state);
+void mqtt_fsm_poll(Mqtt *mqtt);
 
 #endif // __MQTT_FC_FSM_H__

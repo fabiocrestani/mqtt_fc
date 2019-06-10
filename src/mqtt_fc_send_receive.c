@@ -18,12 +18,11 @@
 #include "tcp.h"
 #include "logger.h"
 #include "utils.h"
+#include "circular_buffer.h"
 
-CircularBuffer *circular_buffer;
-
-void mqtt_set_circular_buffer(CircularBuffer *ptr_buffer)
+void mqtt_set_circular_buffer(Mqtt *mqtt, CircularBuffer *ptr_buffer)
 {
-	circular_buffer = ptr_buffer;
+	mqtt->circular_buffer = ptr_buffer;
 }
 
 uint8_t mqtt_send(void * message)
@@ -140,17 +139,17 @@ uint8_t mqtt_handle_received_message(char *buffer, uint32_t len)
 	}
 }
 
-void mqtt_rx_poll(void)
+void mqtt_rx_poll(Mqtt *mqtt)
 {
 	char buffer[256];
 	uint32_t len = 0;
 		
-	if (buffer_is_empty(circular_buffer))
+	if (buffer_is_empty(mqtt->circular_buffer))
 	{
 		return;
 	}
 
-	len = buffer_pop_array(circular_buffer, buffer);
+	len = buffer_pop_array(mqtt->circular_buffer, buffer);
 
 	if (len > 0)
 	{
@@ -159,9 +158,9 @@ void mqtt_rx_poll(void)
 
 }
 
-void mqtt_poll(void)
+void mqtt_poll(Mqtt *mqtt)
 {
-	mqtt_rx_poll();
-	mqtt_fsm_poll();
+	mqtt_rx_poll(mqtt);
+	mqtt_fsm_poll(mqtt);
 }
 

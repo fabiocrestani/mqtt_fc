@@ -429,7 +429,7 @@ void logger_print_separator(void)
 ----------------------------------------\n");
 }
 
-const char * translate_message_type(MessageType message_type)
+const char * translate_message_type(EMessageType message_type)
 {
 	switch (message_type)
 	{
