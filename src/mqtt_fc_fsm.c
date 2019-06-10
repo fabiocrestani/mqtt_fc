@@ -101,6 +101,9 @@ void mqtt_fsm_poll(Mqtt *mqtt)
 	}
 }
 
+///////////////////////////////////////////////////////////////////////////
+// Idle
+///////////////////////////////////////////////////////////////////////////
 void mqtt_state_idle(Mqtt *mqtt)
 {
 	if (mqtt->substate == E_MQTT_SUBSTATE_SEND)
@@ -147,7 +150,14 @@ void mqtt_state_connect(Mqtt *mqtt)
 	} 
 	else if (mqtt->substate == E_MQTT_SUBSTATE_WAIT)
 	{
-		logger_log("Waiting response from connect");
+		if (mqtt->connected)
+		{
+			logger_log("Connected!");
+		}
+		else
+		{
+			logger_log("Waiting response from connect");
+		}
 	}	
 }
 

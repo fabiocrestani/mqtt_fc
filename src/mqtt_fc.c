@@ -24,6 +24,8 @@
 #include "logger.h"
 #include "utils.h"
 
+Mqtt global_mqtt;
+
 Timer timer_mqtt_fsm;
 
 static uint16_t message_id_counter = 1;
@@ -128,6 +130,7 @@ uint8_t mqtt_handle_received_connack(char *buffer, uint32_t len)
 	if (mqtt_unpack_connack_message(buffer, len, &connack_message))
 	{
 		log_message(&connack_message);
+		global_mqtt.connected = TRUE;
 		return TRUE;
 	}
 	else 

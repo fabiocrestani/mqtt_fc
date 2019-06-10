@@ -14,6 +14,8 @@
 #include "timer.h"
 #include "mqtt_fc_fsm.h"
 
+extern Mqtt global_mqtt;
+
 extern Timer timer_mqtt_fsm;
 
 #define TRUE (1)
