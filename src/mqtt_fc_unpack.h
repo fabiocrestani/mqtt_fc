@@ -1,10 +1,10 @@
 /*
- * mqtt_fc_pack_unpack.h
+ * mqtt_fc_unpack.h
  * Author: Fabio Crestani
  */
 
-#ifndef __MQTT_PACK_UNPACK_H__
-#define __MQTT_PACK_UNPACK_H__
+#ifndef __MQTT_UNPACK_H__
+#define __MQTT_UNPACK_H__
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -13,16 +13,6 @@
 
 #include "mqtt_fc.h"
 
-// Message packers
-uint32_t mqtt_pack_publish_message(PublishMessage message, char *buffer);
-uint32_t mqtt_pack_connect_message(ConnectMessage message, char *buffer);
-uint32_t mqtt_pack_puback_message(PubAckMessage message, char *buffer);
-uint32_t mqtt_pack_subscribe_message(SubscribeMessage message, char *buffer);
-uint32_t mqtt_pack_suback_message(SubAckMessage message, char *buffer);
-uint32_t mqtt_pack_pingreq_message(PingReqMessage message, char *buffer);
-uint32_t mqtt_pack_pingresp_message(PingRespMessage message, char *buffer);
-
-// Message unpackers
 uint8_t mqtt_unpack_fixed_header(char buffer[], uint32_t len, 
 									FixedHeader *header);
 uint8_t mqtt_unpack_connack_message(char buffer[], uint32_t len,
@@ -36,4 +26,4 @@ uint8_t mqtt_unpack_suback_message(char buffer[], uint32_t len,
 uint8_t mqtt_unpack_publish_message(char buffer[], uint32_t len, 
 									PublishMessage *received_message);
 
-#endif // __MQTT_PACK_UNPACK_H__
+#endif // __MQTT_UNPACK_H__

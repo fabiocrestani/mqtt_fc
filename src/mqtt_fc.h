@@ -279,38 +279,10 @@ typedef struct DisconnectMessage_ {
 } DisconnectMessage;
 
 
-
 ///////////////////////////////////////////////////////////////////////////////
 // FUNCTIONS
 ///////////////////////////////////////////////////////////////////////////////
 void error(char *msg);
-
-// Message builders
-FixedHeader mqtt_build_fixed_header(uint8_t message_type, uint8_t dup,
-	uint8_t qos, uint8_t retain, uint8_t remaining_length);
-
-ConnectMessage mqtt_build_connect_message(char protocol_name[],
-	char client_id[]);
-
-PublishMessage mqtt_build_publish_message(char topic_name[], uint16_t id, 
-	char payload[], uint32_t payload_len, EQosLevel qos);
-
-// Message packers
-uint32_t mqtt_pack_publish_message(PublishMessage message, char *buffer);
-uint32_t mqtt_pack_connect_message(ConnectMessage message, char *buffer);
-uint32_t mqtt_pack_puback_message(PubAckMessage message, char *buffer);
-uint32_t mqtt_pack_subscribe_message(SubscribeMessage message, char *buffer);
-uint32_t mqtt_pack_suback_message(SubAckMessage message, char *buffer);
-uint32_t mqtt_pack_pingreq_message(PingReqMessage message, char *buffer);
-uint32_t mqtt_pack_pingresp_message(PingRespMessage message, char *buffer);
-
-// Message unpackers
-uint8_t mqtt_unpack_fixed_header(char buffer[], uint32_t len, 
-									FixedHeader *header);
-uint8_t mqtt_unpack_connack_message(char buffer[], uint32_t len,
-								    ConnackMessage *connack_message);
-uint8_t mqtt_unpack_puback_message(char buffer[], uint32_t len,
-								   PubAckMessage *puback_message);
 
 // Commands
 uint8_t	mqtt_connect(char mqtt_protocol_name[], char mqtt_client_id[]);
