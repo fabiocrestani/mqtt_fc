@@ -155,7 +155,6 @@ void mqtt_rx_poll(Mqtt *mqtt)
 	{
 		mqtt_handle_received_message(buffer, len);
 	}
-
 }
 
 void mqtt_poll(Mqtt *mqtt)

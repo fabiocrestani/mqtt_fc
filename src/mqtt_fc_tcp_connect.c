@@ -41,15 +41,12 @@ uint8_t mqtt_tcp_server_connect(Mqtt *mqtt)
 
 	if (!tcp_connect(mqtt->server_address, mqtt->server_port))
 	{
-		sprintf(temp, "[tcp] Error connecting to %s:%d", 
-						mqtt->server_address, mqtt->server_port);
-		logger_log(temp);
 		return FALSE;
 	}
 
 	tcp_set_socket_non_blocking();
 
-	sprintf(temp, "[tcp] Connected to %s:%d", mqtt->server_address,
+	sprintf(temp, "[tcp] Connected to %s:%u", mqtt->server_address,
 												 mqtt->server_port);
 	logger_log(temp);
 	return TRUE;

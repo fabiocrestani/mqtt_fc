@@ -18,7 +18,7 @@
 #include "logger.h"
 #include "circular_buffer.h"
 
-int sockfd, n;
+int sockfd;
 struct sockaddr_in serv_addr;
 struct hostent *server;
 
@@ -26,6 +26,10 @@ CircularBuffer *circular_buffer;
 
 uint8_t tcp_connect(char server_address[], uint32_t server_port)
 {
+	fd_set fdset;
+	struct timeval tv;
+	char temp[512];
+
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockfd < 0)
     {
@@ -33,6 +37,7 @@ uint8_t tcp_connect(char server_address[], uint32_t server_port)
 		return FALSE;
     }
 
+    fcntl(sockfd, F_SETFL, O_NONBLOCK);
     server = gethostbyname(server_address);
 
     if (server == NULL)
@@ -46,14 +51,33 @@ uint8_t tcp_connect(char server_address[], uint32_t server_port)
     bcopy((char *)server->h_addr, (char *) &serv_addr.sin_addr.s_addr, server->h_length);
     serv_addr.sin_port = htons(server_port);
     
-	if (connect(sockfd,(struct sockaddr *) &serv_addr,sizeof(serv_addr)) < 0)
+	connect(sockfd, (struct sockaddr *) &serv_addr, sizeof(serv_addr));
+        
+	FD_ZERO(&fdset);
+    FD_SET(sockfd, &fdset);
+    tv.tv_sec = TCP_DEFAULT_CONNECT_TIMEOUT_S; // default: 10s
+    tv.tv_usec = 0;
+
+	if (select(sockfd + 1, NULL, &fdset, NULL, &tv) == 1)
     {
-        //printf("[tcp_connect] Error connecting to server %s:%d\n", 
-			//server_address, server_port);
-		return FALSE;
+        int so_error;
+        socklen_t len = sizeof(so_error);
+
+        getsockopt(sockfd, SOL_SOCKET, SO_ERROR, &so_error, &len);
+        if (so_error == 0) 
+		{
+            return TRUE;
+        }
     }
 
-	return TRUE;
+	sprintf(temp, "[tcp_connect] Error connecting to server %s:%d", 
+		server_address, server_port);
+	logger_log(temp);
+	sprintf(temp, "[tcp_connect] TCP connect exceeded max timeout (%d seconds)",
+		TCP_DEFAULT_CONNECT_TIMEOUT_S);
+	logger_log(temp);
+
+	return FALSE;
 }
 
 void tcp_set_circular_buffer(CircularBuffer *ptr_buffer)
@@ -87,13 +111,13 @@ uint8_t tcp_send(char buffer[], uint32_t len)
 
 uint8_t tcp_receive(char buffer[], uint32_t *len)
 {
-    *len = read(sockfd, buffer, 255);
+	int ret = read(sockfd, buffer, 255);
     if (*len <= 0)
     {
         //printf("ERROR reading from socket\n");
 		return FALSE;
     }
-
+    *len = ret;
     return TRUE;
 }
 

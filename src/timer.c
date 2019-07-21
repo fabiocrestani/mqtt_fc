@@ -28,7 +28,7 @@ uint8_t timer_init(Timer *timer, uint32_t period_us, uint32_t counter_max)
 	timer->period_us = period_us;
 	timer->counter_max = counter_max;
 
-	printf("timer_init Timer initialized with period of %d us (%0.3f s) \n", 
+	printf("timer_init Timer initialized with period of %u us (%0.3f s) \n", 
 		period_us, (period_us / 1000000.0));
 
 	return TRUE;
@@ -62,7 +62,7 @@ void *timer_thread_handler(void *args)
 	while (1)
 	{
 #ifdef LOG_TIMER_PROGRESS
-		printf("Thread running... Timer %d Period: %d us Counter: %d / %d\n",
+		printf("Thread running... Timer %u Period: %u us Counter: %u / %u\n",
 			timer->id, timer->period_us, timer->counter, timer->counter_max);
 #endif
 		usleep(timer->period_us);

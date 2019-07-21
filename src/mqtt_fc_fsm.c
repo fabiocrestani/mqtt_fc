@@ -78,7 +78,7 @@ void mqtt_fsm_poll(Mqtt *mqtt)
 	}
 
 #ifdef LOG_MQTT_FSM_POLL
-	sprintf(temp, "State %s (%d), Substate: %s (%d)", 
+	sprintf(temp, "State: %s (%d), Substate: %s (%d)", 
 		mqtt_fsm_translate_state(mqtt->state), mqtt->state,
 		mqtt_fsm_translate_substate(mqtt->substate), mqtt->substate);
 	logger_log(temp);
@@ -110,6 +110,7 @@ void mqtt_state_idle(Mqtt *mqtt)
 	{
 		logger_log("MQTT is waiting to start");
 		mqtt->substate = E_MQTT_SUBSTATE_WAIT;
+		mqtt->retries = 0;
 	} 
 	else if (mqtt->substate == E_MQTT_SUBSTATE_WAIT)
 	{
@@ -129,8 +130,16 @@ void mqtt_state_tcp_connect(Mqtt *mqtt)
 		}
 		else
 		{
-			// TODO add retries counter
-			mqtt_fsm_set_error_state(E_MQTT_STATE_TCP_CONNECT);
+			(mqtt->retries)++;
+			char temp[512];
+			sprintf(temp, "[tcp] Connection error. Retry %d/%d",
+				mqtt->retries, TCP_CONNECT_MAX_RETRIES);		
+			logger_log(temp);
+			if (mqtt->retries >= TCP_CONNECT_MAX_RETRIES)
+			{
+				logger_log("[tcp] Max retries exceeded.");
+				mqtt_fsm_set_error_state(E_MQTT_STATE_TCP_CONNECT);
+			}
 		}
 	}
 }

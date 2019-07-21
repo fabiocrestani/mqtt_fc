@@ -29,7 +29,7 @@ CircularBuffer mqtt_rx_buffer;
 
 int main(int argc, char *argv[])
 {
-	printf("\n");
+	printf("\nmqtt_fc\n");
 	mqtt_init();
 	Mqtt *mqtt = mqtt_get_instance();
 	

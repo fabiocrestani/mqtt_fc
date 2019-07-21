@@ -28,7 +28,7 @@ void buffer_put(CircularBuffer *buf, char newEl)
 void buffer_put_array(CircularBuffer *buf, char *input, uint32_t len)
 {
 #ifdef DEBUG_CIRCULAR_BUFFER
-	printf("[buffer] Trying to insert %d elements into circular buffer\n", len);
+	printf("[buffer] Trying to insert %u elements into circular buffer\n", len);
 #endif
 	if ((buf->numEl + len) < BUFFER_SIZE)
 	{
@@ -42,7 +42,7 @@ void buffer_put_array(CircularBuffer *buf, char *input, uint32_t len)
 			}
 		}
 #ifdef DEBUG_CIRCULAR_BUFFER
-		printf("[buffer] %d elements added into circular buffer\n", len);
+		printf("[buffer] %u elements added into circular buffer\n", len);
 #endif
 	}
 }

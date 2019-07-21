@@ -20,3 +20,6 @@ run: mqtt_fc
 clean:
 	-$(RM) $(EXECUTABLES)$(OBJS)$(C_DEPS) mqtt_fc
 	-$(RM) *.o
+
+again: clean mqtt_fc
+	

@@ -27,15 +27,15 @@ void dump(char *data, uint32_t len)
 	uint32_t temp_idx = 0;
 	uint32_t byte_counter = 0;
 
-	printf("Dumping %d bytes:\n", len);
+	printf("Dumping %u bytes:\n", len);
 	printf("    ");
 
 	for (uint32_t i = 0; i < 8; i++)
 	{
-		printf("    %d", i);
+		printf("    %u", i);
     }
 
-	printf("\n%03d: ", byte_counter);
+	printf("\n%03u: ", byte_counter);
 
 	for (uint32_t i = 0; i < len; i++)
 	{
@@ -58,7 +58,7 @@ void dump(char *data, uint32_t len)
 				}
 			}
 			byte_counter = byte_counter + 8;
-			printf("\n%03d: ", byte_counter);
+			printf("\n%03u: ", byte_counter);
 			temp_idx = 0;
 		}
 	}
@@ -98,7 +98,7 @@ void logger_print_timestamp(void)
 	gettimeofday(&tv, NULL);
 	uint32_t us = tv.tv_usec;
 
-	sprintf(buffer, "[%02d.%02d.%02d %02d:%02d:%02d:%06d]", 
+	sprintf(buffer, "[%02d.%02d.%02d %02d:%02d:%02d:%06u]", 
 			tm->tm_mday, tm->tm_mon + 1, tm->tm_year + 1900, tm->tm_hour, 
 			tm->tm_min, tm->tm_sec, us);
 
@@ -274,14 +274,14 @@ void log_message(void * message)
 	FixedHeader *header = (FixedHeader *) message;
 	uint8_t type = header->message_type;
 
-	ConnectMessage *connect_message;
-	ConnackMessage *connack_message;
-	PublishMessage *publish_message;
-	PingReqMessage *pingreq_message;
-	PingRespMessage *pingresp_message;
-	SubscribeMessage *subscribe_message;
-	PubAckMessage *puback_message;
-	SubAckMessage *suback_message;
+	ConnectMessage *connect_message = 0;
+	ConnackMessage *connack_message = 0;
+	PublishMessage *publish_message = 0;
+	PingReqMessage *pingreq_message = 0;
+	PingRespMessage *pingresp_message = 0;
+	SubscribeMessage *subscribe_message = 0;
+	PubAckMessage *puback_message = 0;
+	SubAckMessage *suback_message = 0;
 
 	if ((type == 0) || (type > MESSAGE_TYPE_COUNT))
 	{
@@ -415,7 +415,7 @@ void log_publish_message_payload(PublishMessage publish_message)
 
 	publish_message.payload[publish_message.payload_len] = 0;
 
-	sprintf(temp, "[mqtt] Publish message payload received: (%d) %s", 
+	sprintf(temp, "[mqtt] Publish message payload received: (%u) %s", 
 		publish_message.payload_len, publish_message.payload);
 	logger_log(temp);
 #else
