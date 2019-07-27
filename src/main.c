@@ -45,7 +45,7 @@ int main(int argc, char *argv[])
 		mqtt_tcp_connect_set_server_port(mqtt, atoi(argv[2]));
 	}
 
-	timer_init(&timer_mqtt_fsm, TIMER_PERIOD_1_MS * 1000, 1);
+	timer_init(&timer_mqtt_fsm, TIMER_PERIOD_1_MS * 500, 1);
 	timer_start(&timer_mqtt_fsm);
 
 	tcp_set_circular_buffer(&mqtt_rx_buffer);
@@ -65,7 +65,7 @@ int main(int argc, char *argv[])
 		// Dummy sensor produces data and puts in mqtt tx queue
 		//dummy_sensor_poll();
 	
-		//usleep(1000*1000);
+		usleep(1000*1000);
 	}
 
 
@@ -83,46 +83,9 @@ int main(int argc, char *argv[])
 	mqtt_receive_response();
 
 
-	tcp_set_socket_non_blocking();
 
-	///////////////////////////////////////////////////////////////////////////
-	// Wait for remote PUBLISH messages
-	///////////////////////////////////////////////////////////////////////////
-	int progress = 0;
-	while (1)
-	{
-		// Poll MQTT for messages
-		PublishMessage received_message;		
-		if (mqtt_poll_publish_messages(&received_message))
-		{
-			for (int i = 0; i++ < progress; printf("\b"));
-			for (int i = 0; i++ < progress; printf(" "));
-			for (int i = 0; i++ < progress; printf("\b"));
-			progress = 0;
-
-			//log_publish_message(received_message);
-			log_publish_message_payload(received_message);
-
-			// TODO Send ACK if QoS asks for
-			mqtt_send_response_to_publish_message(received_message);
-		}
-
-		printf(".");
-		progress++;
-		if (progress >= 30)
-		{
-			for (int i = 0; i++ < progress; printf("\b"));
-			for (int i = 0; i++ < progress; printf(" "));
-			for (int i = 0; i++ < progress; printf("\b"));
-			progress = 0;
-		}
-
-		fflush(stdout);	
-
-		usleep(100*1000);	
-	}
-*/
 
     return 0;
+*/
 }
 

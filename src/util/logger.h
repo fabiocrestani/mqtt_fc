@@ -27,7 +27,7 @@ typedef enum EConnakReturnCode_ EConnakReturnCode;
 #define LOG_SUBSCRIBE (FALSE)
 #define LOG_SUBACK (FALSE)
 
-#define LOG_PUBLISH_PAYLOAD (TRUE)
+#define LOG_PUBLISH_PAYLOAD (FALSE)
 
 #define LOG_DUMP (TRUE)
 #define LOG_DUMP_CONNECT (FALSE)
@@ -38,7 +38,7 @@ typedef enum EConnakReturnCode_ EConnakReturnCode;
 #define LOG_DUMP_SUBACK (FALSE)
 
 // For debugging only
-#define LOG_MQTT_FSM_POLL
+//#define LOG_MQTT_FSM_POLL
 //#define LOG_TIMER_PROGRESS
 
 // Log
@@ -47,7 +47,7 @@ void dump(char *data, uint32_t len);
 
 // Log messages with a single function call
 void log_message(void * message);
-void log_publish_message_payload(PublishMessage publish_message);
+void log_publish_message_payload(PublishMessage *publish_message);
 
 // Translators
 const char * translate_message_type(EMessageType message_type);

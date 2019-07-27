@@ -59,7 +59,7 @@ void mqtt_init(void)
 	lc_mqtt.wait_for_topic_subscribe = FALSE;
 	lc_mqtt.subscribe_topics_number = 0;
 	lc_mqtt.subscribe_topics_subscribed = 0;
-
+	lc_mqtt.received_publish_counter = 0;
 }
 
 void mqtt_start(Mqtt *mqtt)
@@ -78,12 +78,18 @@ void mqtt_restart(Mqtt *mqtt)
 	lc_mqtt.is_all_topics_subscribed = FALSE;
 	lc_mqtt.wait_for_topic_subscribe = FALSE;
 	lc_mqtt.subscribe_topics_subscribed = 0;
+	lc_mqtt.received_publish_counter = 0;
 	mqtt_fsm_set_state(mqtt, E_MQTT_STATE_TCP_CONNECT);
 }
 
 Mqtt * mqtt_get_instance(void)
 {
 	return &lc_mqtt;
+}
+
+void mqtt_reset_ping_timeout(Mqtt *mqtt)
+{
+	mqtt->ping_timeout = 0;
 }
 
 void mqtt_set_subscribe_topics(Mqtt *mqtt, 
@@ -198,7 +204,6 @@ uint8_t mqtt_poll_publish_messages(PublishMessage *received_message)
 	return FALSE;
 }
 
-
 ///////////////////////////////////////////////////////////////////////////////
 // Received Publish response handler
 ///////////////////////////////////////////////////////////////////////////////
@@ -219,5 +224,18 @@ uint8_t	mqtt_send_response_to_publish_message(PublishMessage publish_message)
 		default:
 		return TRUE;
 	}
+}
+
+// Returns the last PUBLISH received message
+uint8_t mqtt_get_last_publish_received_message(Mqtt *mqtt, PublishMessage *message)
+{
+	if (mqtt->received_publish_counter > 0)
+	{
+		*message = mqtt->
+			received_publish_message_queue[mqtt->received_publish_counter-1];
+		(mqtt->received_publish_counter)--;
+		return TRUE;
+	}
+	return FALSE;
 }
 

@@ -25,20 +25,22 @@ extern Timer timer_mqtt_fsm;
 
 #define KEEP_ALIVE_TIMER_VALUE (60)
 
+// Fields size
 #define CONNECT_PROTOCOL_NAME_MAX_LEN (255)
 #define CONNECT_CLIENT_ID_MAX_LEN (23)
-
 #define CONNACK_MESSAGE_SIZE (4)
 #define PUBLISH_PAYLOAD_MAX_LEN (255)
 #define PUBACK_MESSAGE_SIZE (4)
 #define PINGRESP_MESSAGE_SIZE (2)
 #define SUBACK_MIN_MESSAGE_SIZE (5)
 
+// Receive Publish messages
 #define RECEIVED_PUBLISH_MIN_MESSAGE_SIZE (7)
+#define MQTT_RECEIVED_PUBLISH_QUEUE_SIZE (32)
 
 // Retries
 #define TCP_CONNECT_MAX_RETRIES (5)
-#define MQTT_MAX_PING_TIMEOUT (4)
+#define MQTT_MAX_PING_TIMEOUT (20)
 #define MQTT_PING_RESPONSE_MAX_RETRIES (5)
 #define MQTT_SUBSCRIBE_RESPONSE_MAX_RETRIES (5)
 
@@ -81,34 +83,6 @@ typedef enum EConnakReturnCode_ {
 ///////////////////////////////////////////////////////////////////////////////
 // STRUCTS
 ///////////////////////////////////////////////////////////////////////////////
-typedef struct Mqtt_ {
-	// Buffers
-	CircularBuffer *circular_buffer_rx;
-	CircularBuffer *circular_buffer_tx;
-
-	// Server address and port
-	char server_address[512];
-	uint32_t server_port;
-
-	// State machine
-	EMqttState state;
-	EMqttSubstate substate;
-	uint32_t retries;
-	uint32_t ping_timeout;
-	
-	// Flags
-	uint8_t connected;
-	uint8_t pong_received;
-	uint8_t wait_for_topic_subscribe;
-	uint8_t is_all_topics_subscribed;
-
-	// Subscribe topics
-	char subscribe_topics[MQTT_SUBSCRIBE_TOPIC_NUM_MAX][MQTT_TOPIC_NAME_MAX_LEN];
-	uint8_t subscribe_topics_number;
-	uint8_t subscribe_topics_subscribed;
-
-} Mqtt;
-
 typedef struct FixedHeader_ {
 	union {
 		uint8_t byte1;
@@ -198,28 +172,28 @@ typedef struct ConnackMessage_ {
 // to one or more topics, any message published to those topics are sent by the
 // server to the client as a PUBLISH message.
 typedef struct PublishMessage_ {
-	FixedHeader header;
+   FixedHeader header;
 
-	union {
-		uint16_t topic_name_len;
-		struct {
-			uint8_t topic_name_len_lsb;
-			uint8_t topic_name_len_msb;
-		};	
-	};
+   union {
+       uint16_t topic_name_len;
+       struct {
+               uint8_t topic_name_len_lsb;
+               uint8_t topic_name_len_msb;
+       };      
+   };
 
-	uint8_t topic_name[MQTT_TOPIC_NAME_MAX_LEN];
+   uint8_t topic_name[MQTT_TOPIC_NAME_MAX_LEN];
 
-	union {
-		uint16_t message_id;
-		struct {
-			uint8_t message_id_lsb;
-			uint8_t	message_id_msb;
-		};	
-	};
+   union {
+       uint16_t message_id;
+       struct {
+               uint8_t message_id_lsb;
+               uint8_t message_id_msb;
+       };      
+   };
 
-	uint8_t payload[PUBLISH_PAYLOAD_MAX_LEN];
-	uint32_t payload_len;
+   uint8_t payload[PUBLISH_PAYLOAD_MAX_LEN];
+   uint32_t payload_len;
 } PublishMessage;
 
 // A PUBACK message is the response to a PUBLISH message with QoS level 1. 
@@ -314,6 +288,39 @@ typedef struct DisconnectMessage_ {
 
 } DisconnectMessage;
 
+// Main struct
+typedef struct Mqtt_ {
+	// Buffers
+	CircularBuffer *circular_buffer_rx;
+	CircularBuffer *circular_buffer_tx;
+
+	// Server address and port
+	char server_address[512];
+	uint32_t server_port;
+
+	// State machine
+	EMqttState state;
+	EMqttSubstate substate;
+	uint32_t retries;
+	uint32_t ping_timeout;
+	
+	// Flags
+	uint8_t connected;
+	uint8_t pong_received;
+	uint8_t wait_for_topic_subscribe;
+	uint8_t is_all_topics_subscribed;
+
+	// Subscribe topics
+	char subscribe_topics[MQTT_SUBSCRIBE_TOPIC_NUM_MAX][MQTT_TOPIC_NAME_MAX_LEN];
+	uint8_t subscribe_topics_number;
+	uint8_t subscribe_topics_subscribed;
+
+	// Received Publish messages
+	PublishMessage received_publish_message_queue[MQTT_RECEIVED_PUBLISH_QUEUE_SIZE];
+	uint32_t received_publish_counter;
+
+} Mqtt;
+
 
 ///////////////////////////////////////////////////////////////////////////////
 // FUNCTIONS
@@ -323,6 +330,7 @@ void mqtt_init(void);
 void mqtt_start(Mqtt *mqtt);
 void mqtt_restart(Mqtt *mqtt);
 Mqtt * mqtt_get_instance(void);
+void mqtt_reset_ping_timeout(Mqtt *mqtt);
 void mqtt_set_subscribe_topics(Mqtt *mqtt, 
 	char topics[][MQTT_TOPIC_NAME_MAX_LEN], uint32_t num_topics);
 
@@ -338,5 +346,6 @@ uint8_t mqtt_poll_publish_messages(PublishMessage *received_message);
 
 // Response for remote Publish messages
 uint8_t	mqtt_send_response_to_publish_message(PublishMessage publish_message);
+uint8_t mqtt_get_last_publish_received_message(Mqtt *mqtt, PublishMessage *message);
 
 #endif // __MQTT_H__

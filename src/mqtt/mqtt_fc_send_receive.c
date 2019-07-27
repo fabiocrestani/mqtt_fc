@@ -123,8 +123,10 @@ uint8_t mqtt_handle_received_message(char *buffer, uint32_t len)
 			case SUBACK:
 				return mqtt_handle_received_suback(buffer, len);
 
-			case CONNECT:
 			case PUBLISH:
+				return mqtt_handle_received_publish(buffer, len);
+
+			case CONNECT:
 			case PUBREC:
 			case PUBREL:
 			case PUBCOMP:

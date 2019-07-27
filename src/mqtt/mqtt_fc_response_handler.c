@@ -24,6 +24,8 @@
 #include "logger.h"
 #include "utils.h"
 
+void mqtt_queue_received_publish(Mqtt *mqtt, PublishMessage *message);
+
 ///////////////////////////////////////////////////////////////////////////////
 // Response handlers
 ///////////////////////////////////////////////////////////////////////////////
@@ -113,5 +115,45 @@ uint8_t mqtt_handle_received_suback(char *buffer, uint32_t len)
 	}
 }
 
+// A PUBLISH message is sent by a client to a server for distribution to 
+// interested subscribers. Each PUBLISH message is associated with a topic name
+// (also known as the Subject or Channel). This is a hierarchical name space
+// that defines a taxonomy of information sources for which subscribers can 
+// register an interest. A message that is published to a specific topic name is
+// delivered to connected subscribers for that topic. If a client subscribes to 
+// one or more topics, any message published to those topics are sent by the
+// server to the client as a PUBLISH message.
+uint8_t mqtt_handle_received_publish(char *buffer, uint32_t len)
+{
+	Mqtt *mqtt = mqtt_get_instance();
 
+	logger_log("[mqtt] PUBLISH message received");
+	PublishMessage message;
+	if (mqtt_unpack_publish_message(buffer, len, &message))
+	{
+		mqtt_queue_received_publish(mqtt, &message);
+		return TRUE;
+	}
+	else 
+	{
+		logger_log("[mqtt] Error parsing PUBLISH message");
+		return FALSE;
+	}
+}
+
+// Adds a message to the queue of received publish messages
+void mqtt_queue_received_publish(Mqtt *mqtt, PublishMessage *message)
+{
+	if (mqtt->received_publish_counter >= MQTT_RECEIVED_PUBLISH_QUEUE_SIZE)
+	{
+		logger_log("[mqtt] Error! Queue of received publish messages is full!");
+		return;
+	}
+
+	log_message(message);
+
+	mqtt->received_publish_message_queue[mqtt->received_publish_counter] = 
+		*message;
+	(mqtt->received_publish_counter)++;
+}
 

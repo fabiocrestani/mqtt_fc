@@ -201,11 +201,28 @@ void mqtt_state_connected(Mqtt *mqtt)
 
 	if (mqtt->substate == E_MQTT_SUBSTATE_WAIT)
 	{
+		// Check if there is any Publish message incoming
+		// If yes, process the data and reset the ping timeout
+		if (mqtt->received_publish_counter > 0)
+		{
+			char temp[512];
+			PublishMessage message;
+			if (mqtt_get_last_publish_received_message(mqtt, &message))
+			{
+				sprintf(temp, "[mqtt] PUBLISH payload is (%d): %s",
+					message.payload_len, message.payload);
+				logger_log(temp);
+				mqtt_reset_ping_timeout(mqtt);
+				return;
+			}
+		}
+
 		// TODO
 		// Check if there is any data in the output buffer
 		// If yes, send the data and reset the ping timeout
+		
 
-		// Sends ping
+		// Sends ping if there is inactivity
 		if ((mqtt->ping_timeout)++ >= MQTT_MAX_PING_TIMEOUT)
 		{
 			mqtt_fsm_set_state(mqtt, E_MQTT_STATE_PING);
@@ -267,7 +284,8 @@ void mqtt_state_subscribe(Mqtt *mqtt)
 			sprintf(temp, "[mqtt] Sending SUBSCRIBE to topic \"%s\"", 
 				mqtt->subscribe_topics[mqtt->subscribe_topics_subscribed]);
 			logger_log(temp);
-			mqtt_subscribe(mqtt->subscribe_topics[mqtt->subscribe_topics_subscribed], 1);
+			mqtt_subscribe(
+				mqtt->subscribe_topics[mqtt->subscribe_topics_subscribed], 1);
 			mqtt->wait_for_topic_subscribe = TRUE;
 			mqtt->substate = E_MQTT_SUBSTATE_WAIT;
 		}

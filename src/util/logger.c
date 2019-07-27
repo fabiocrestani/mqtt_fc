@@ -313,6 +313,7 @@ void log_message(void * message)
 				dump_publish_message(*publish_message);
 				logger_print_separator();
 				printf("\n");
+				log_publish_message_payload(publish_message);
 			#else
 				(void) publish_message;
 			#endif
@@ -408,15 +409,15 @@ void log_message(void * message)
 	}
 }
 
-void log_publish_message_payload(PublishMessage publish_message)
+void log_publish_message_payload(PublishMessage *publish_message)
 {
 #if LOG_PUBLISH_PAYLOAD == TRUE
 	char temp[128];
 
-	publish_message.payload[publish_message.payload_len] = 0;
+	publish_message->payload[publish_message->payload_len] = 0;
 
 	sprintf(temp, "[mqtt] Publish message payload received: (%u) %s", 
-		publish_message.payload_len, publish_message.payload);
+		publish_message->payload_len, publish_message->payload);
 	logger_log(temp);
 #else
 	(void) publish_message;
