@@ -22,6 +22,7 @@
 #include "logger.h"
 #include "utils.h"
 #include "circular_buffer.h"
+#include "sensor_dummy.h"
 
 CircularBuffer mqtt_rx_buffer;
 CircularBuffer mqtt_tx_buffer;
@@ -56,22 +57,25 @@ int main(int argc, char *argv[])
 	mqtt_set_subscribe_topics(mqtt, topics_to_subscribe, 3);
 	mqtt_start(mqtt);
 
+	timer_init(&timer_sensor_dummy, TIMER_PERIOD_1_S * 5, 1);
+	timer_start(&timer_sensor_dummy);
+
 	while (1)
 	{
+		// Polls TCP for input/output of data
 		tcp_poll();
 
+		// Polls MQTT main FSM
 		mqtt_poll(mqtt);
 
 		// Dummy sensor produces data and puts in mqtt tx queue
-		//dummy_sensor_poll();
+		dummy_sensor_poll();
 	
 		usleep(1000*1000);
 	}
 
 
-/*	mqtt_receive_response();
-
-
+/*	
 	///////////////////////////////////////////////////////////////////////////
 	// Publish
 	///////////////////////////////////////////////////////////////////////////
@@ -81,11 +85,11 @@ int main(int argc, char *argv[])
 	char message_to_publish[] = "2";
 	mqtt_publish(topic_to_publish, message_to_publish, E_QOS_PUBACK);
 	mqtt_receive_response();
-
+*/
 
 
 
     return 0;
-*/
+
 }
 
