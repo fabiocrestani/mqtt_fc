@@ -27,6 +27,7 @@ void mqtt_state_tcp_connect(Mqtt *mqtt);
 void mqtt_state_connect(Mqtt *mqtt);
 void mqtt_state_connected(Mqtt *mqtt);
 void mqtt_state_ping(Mqtt *mqtt);
+void mqtt_state_subscribe(Mqtt *mqtt);
 
 void mqtt_fsm_set_state(Mqtt *mqtt, EMqttState new_state)
 {
@@ -97,9 +98,9 @@ void mqtt_fsm_poll(Mqtt *mqtt)
 		case E_MQTT_STATE_CONNECT: mqtt_state_connect(mqtt); break;
 		case E_MQTT_STATE_CONNECTED: mqtt_state_connected(mqtt); break;
 		case E_MQTT_STATE_PING: mqtt_state_ping(mqtt); break;
+		case E_MQTT_STATE_SUBSCRIBE: mqtt_state_subscribe(mqtt); break;
 
 		case E_MQTT_STATE_ERROR:
-		case E_MQTT_STATE_SUBSCRIBE:
 		case E_MQTT_STATE_POOL_LOCAL_DATA:
 		case E_MQTT_STATE_POOL_REMOTE_DATA:
 		default:
@@ -187,6 +188,14 @@ void mqtt_state_connected(Mqtt *mqtt)
 {
 	if (mqtt->substate == E_MQTT_SUBSTATE_SEND)
 	{
+		// When first connected, subscribe to desired topics
+		if (mqtt->is_all_topics_subscribed == FALSE)
+		{
+			mqtt_fsm_set_state(mqtt, E_MQTT_STATE_SUBSCRIBE);
+			return;
+		}
+
+		// After subscribing, wait for incoming data
 		mqtt->substate = E_MQTT_SUBSTATE_WAIT;
 	}
 
@@ -205,7 +214,6 @@ void mqtt_state_connected(Mqtt *mqtt)
 	}
 }
 			
-
 ///////////////////////////////////////////////////////////////////////////
 // Ping
 ///////////////////////////////////////////////////////////////////////////
@@ -241,7 +249,65 @@ void mqtt_state_ping(Mqtt *mqtt)
 		}
 	}	
 }
-	
+
+///////////////////////////////////////////////////////////////////////////
+// Subscribe
+///////////////////////////////////////////////////////////////////////////
+void mqtt_state_subscribe(Mqtt *mqtt)
+{
+	char temp[512];
+
+	if (mqtt->substate == E_MQTT_SUBSTATE_SEND)
+	{
+		// If there are topics to be subscribed
+		if ((mqtt->subscribe_topics_number > 0) && 
+				(mqtt->subscribe_topics_subscribed < mqtt->subscribe_topics_number))
+		{
+			// Send subscribe message
+			sprintf(temp, "[mqtt] Sending SUBSCRIBE to topic \"%s\"", 
+				mqtt->subscribe_topics[mqtt->subscribe_topics_subscribed]);
+			logger_log(temp);
+			mqtt_subscribe(mqtt->subscribe_topics[mqtt->subscribe_topics_subscribed], 1);
+			mqtt->wait_for_topic_subscribe = TRUE;
+			mqtt->substate = E_MQTT_SUBSTATE_WAIT;
+		}
+		// All topics subscribed
+		else
+		{
+			sprintf(temp, "[mqtt] All topics subscribed (%d)",
+				mqtt->subscribe_topics_subscribed);
+			logger_log(temp);
+			mqtt->is_all_topics_subscribed = TRUE;
+			mqtt_fsm_set_state(mqtt, E_MQTT_STATE_CONNECTED);
+		}
+	}
+	// Waiting for subscribe response
+	else if (mqtt->substate == E_MQTT_SUBSTATE_WAIT)
+	{
+		if (mqtt->wait_for_topic_subscribe)
+		{
+			logger_log("[mqtt] Waiting response from SUBSCRIBE");
+			(mqtt->retries)++;
+			if (mqtt->retries >= MQTT_SUBSCRIBE_RESPONSE_MAX_RETRIES)
+			{
+				char temp[512];
+				sprintf(temp, "[mqtt] SUBSCRIBE max retries exceeded (%d).",
+					mqtt->retries);
+				logger_log(temp);
+				(mqtt->subscribe_topics_subscribed)++;
+				mqtt->wait_for_topic_subscribe = FALSE;
+				mqtt_fsm_set_state(mqtt, E_MQTT_STATE_SUBSCRIBE);
+			}
+		}
+		// Topic was subscribed
+		else
+		{
+			(mqtt->subscribe_topics_subscribed)++;
+			mqtt->wait_for_topic_subscribe = FALSE;
+			mqtt_fsm_set_state(mqtt, E_MQTT_STATE_SUBSCRIBE);
+		}
+	}
+}
 
 
 

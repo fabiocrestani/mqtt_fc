@@ -6,7 +6,7 @@ CFLAGS = $(INCLUDE) -Wall -Wextra -lpthread -g
 
 OBJ = main.o mqtt_fc.o tcp.o logger.o mqtt_fc_send_receive.o \
 mqtt_fc_fsm.o mqtt_fc_build.o mqtt_fc_pack.o mqtt_fc_unpack.o \
-timer.o circular_buffer.o mqtt_fc_tcp_connect.o
+timer.o circular_buffer.o mqtt_fc_tcp_connect.o mqtt_fc_response_handler.o
 
 OBJ_FILES = $(addprefix $(BUILDDIR)/,$(OBJ))
 

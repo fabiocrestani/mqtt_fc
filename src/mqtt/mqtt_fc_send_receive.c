@@ -11,6 +11,7 @@
 
 #include "mqtt_fc.h"
 #include "mqtt_fc_send_receive.h"
+#include "mqtt_fc_response_handler.h"
 #include "mqtt_fc_pack.h"
 #include "mqtt_fc_unpack.h"
 #include "mqtt_fc_build.h"

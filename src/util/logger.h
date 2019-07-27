@@ -38,7 +38,7 @@ typedef enum EConnakReturnCode_ EConnakReturnCode;
 #define LOG_DUMP_SUBACK (FALSE)
 
 // For debugging only
-//#define LOG_MQTT_FSM_POLL
+#define LOG_MQTT_FSM_POLL
 //#define LOG_TIMER_PROGRESS
 
 // Log

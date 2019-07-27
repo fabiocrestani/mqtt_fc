@@ -21,6 +21,7 @@ extern Timer timer_mqtt_fsm;
 
 #define MQTT_VERSION (4)
 #define MQTT_TOPIC_NAME_MAX_LEN (255)
+#define MQTT_SUBSCRIBE_TOPIC_NUM_MAX (128)
 
 #define KEEP_ALIVE_TIMER_VALUE (60)
 
@@ -28,13 +29,9 @@ extern Timer timer_mqtt_fsm;
 #define CONNECT_CLIENT_ID_MAX_LEN (23)
 
 #define CONNACK_MESSAGE_SIZE (4)
-
 #define PUBLISH_PAYLOAD_MAX_LEN (255)
-
 #define PUBACK_MESSAGE_SIZE (4)
-
 #define PINGRESP_MESSAGE_SIZE (2)
-
 #define SUBACK_MIN_MESSAGE_SIZE (5)
 
 #define RECEIVED_PUBLISH_MIN_MESSAGE_SIZE (7)
@@ -42,7 +39,8 @@ extern Timer timer_mqtt_fsm;
 // Retries
 #define TCP_CONNECT_MAX_RETRIES (5)
 #define MQTT_MAX_PING_TIMEOUT (4)
-#define MQTT_PING_RESPONSE_MAX_RETRIES (4)
+#define MQTT_PING_RESPONSE_MAX_RETRIES (5)
+#define MQTT_SUBSCRIBE_RESPONSE_MAX_RETRIES (5)
 
 ///////////////////////////////////////////////////////////////////////////////
 // ENUMS
@@ -101,6 +99,13 @@ typedef struct Mqtt_ {
 	// Flags
 	uint8_t connected;
 	uint8_t pong_received;
+	uint8_t wait_for_topic_subscribe;
+	uint8_t is_all_topics_subscribed;
+
+	// Subscribe topics
+	char subscribe_topics[MQTT_SUBSCRIBE_TOPIC_NUM_MAX][MQTT_TOPIC_NAME_MAX_LEN];
+	uint8_t subscribe_topics_number;
+	uint8_t subscribe_topics_subscribed;
 
 } Mqtt;
 
@@ -318,6 +323,8 @@ void mqtt_init(void);
 void mqtt_start(Mqtt *mqtt);
 void mqtt_restart(Mqtt *mqtt);
 Mqtt * mqtt_get_instance(void);
+void mqtt_set_subscribe_topics(Mqtt *mqtt, 
+	char topics[][MQTT_TOPIC_NAME_MAX_LEN], uint32_t num_topics);
 
 // Commands
 uint8_t	mqtt_connect(char mqtt_protocol_name[], char mqtt_client_id[]);
@@ -325,12 +332,6 @@ uint8_t mqtt_publish(char topic_to_publish[], char message_to_publish[],
 						EQosLevel qos);
 uint8_t mqtt_ping_request(void);
 uint8_t mqtt_subscribe(char topic_to_subscribe[], uint8_t requested_qos);
-
-// Response handlers
-uint8_t mqtt_handle_received_connack(char *buffer, uint32_t len);
-uint8_t mqtt_handle_received_puback(char *buffer, uint32_t len);
-uint8_t mqtt_handle_received_pingresp(char *buffer, uint32_t len);
-uint8_t mqtt_handle_received_suback(char *buffer, uint32_t len);
 
 // Polling for remote Publish messages
 uint8_t mqtt_poll_publish_messages(PublishMessage *received_message);

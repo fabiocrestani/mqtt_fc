@@ -55,6 +55,11 @@ void mqtt_init(void)
 	lc_mqtt.retries = 0;
 	lc_mqtt.ping_timeout = 0;
 	lc_mqtt.pong_received = FALSE;
+	lc_mqtt.is_all_topics_subscribed = FALSE;
+	lc_mqtt.wait_for_topic_subscribe = FALSE;
+	lc_mqtt.subscribe_topics_number = 0;
+	lc_mqtt.subscribe_topics_subscribed = 0;
+
 }
 
 void mqtt_start(Mqtt *mqtt)
@@ -70,12 +75,44 @@ void mqtt_restart(Mqtt *mqtt)
 	lc_mqtt.retries = 0;
 	lc_mqtt.ping_timeout = 0;
 	lc_mqtt.pong_received = FALSE;
+	lc_mqtt.is_all_topics_subscribed = FALSE;
+	lc_mqtt.wait_for_topic_subscribe = FALSE;
+	lc_mqtt.subscribe_topics_subscribed = 0;
 	mqtt_fsm_set_state(mqtt, E_MQTT_STATE_TCP_CONNECT);
 }
 
 Mqtt * mqtt_get_instance(void)
 {
 	return &lc_mqtt;
+}
+
+void mqtt_set_subscribe_topics(Mqtt *mqtt, 
+	char topics[][MQTT_TOPIC_NAME_MAX_LEN], uint32_t num_topics)
+{
+	char temp[512];
+
+	mqtt->subscribe_topics_number = 0;
+	for (uint32_t i = 0; i < num_topics; i++)
+	{
+		if (i > MQTT_SUBSCRIBE_TOPIC_NUM_MAX)
+		{
+			return;
+		}
+
+		strcpy(mqtt->subscribe_topics[i], topics[i]);
+		(mqtt->subscribe_topics_number)++;
+
+		sprintf(temp, "[mqtt] Topic \"%s\" was added to list of subscribed topics", 
+			mqtt->subscribe_topics[i]);
+		logger_log(temp);
+	}
+
+	if (mqtt->subscribe_topics_number != num_topics)
+	{
+		sprintf(temp, "[mqtt] WARNING: Not all topics could be added to the list (%d added)", 
+			mqtt->subscribe_topics_number);
+		logger_log(temp);
+	}
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -136,88 +173,6 @@ uint8_t mqtt_subscribe(char topic_to_subscribe[], uint8_t requested_qos)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// Response handlers
-///////////////////////////////////////////////////////////////////////////////
-
-// The CONNACK message is the message sent by the server in response to a 
-// CONNECT request from a client.
-uint8_t mqtt_handle_received_connack(char *buffer, uint32_t len)
-{
-	logger_log("[mqtt] CONNECT response received: CONNACK");
-	ConnackMessage connack_message;
-	if (mqtt_unpack_connack_message(buffer, len, &connack_message))
-	{
-		log_message(&connack_message);
-		lc_mqtt.connected = TRUE;
-		return TRUE;
-	}
-	else 
-	{
-		logger_log("[mqtt] Error parsing CONNACK message");
-		return FALSE;
-	}
-}
-
-// A PUBACK message is the response to a PUBLISH message with QoS level 1. 
-// A PUBACK message is sent by a server in response to a PUBLISH message from a 
-// publishing client, and by a subscriber in response to a PUBLISH message from
-// the server.
-uint8_t mqtt_handle_received_puback(char *buffer, uint32_t len)
-{
-	logger_log("[mqtt] PUBLISH response received: PUBACK");
-	PubAckMessage puback_message;
-	if (mqtt_unpack_puback_message(buffer, len, &puback_message))
-	{
-		log_message(&puback_message);
-		return TRUE;
-	}
-	else 
-	{
-		logger_log("[mqtt] Error parsing PUBACK message");
-		return FALSE;
-	}
-}
-
-// A PINGRESP message is the response sent by a server to a PINGREQ message and
-// means "yes I am alive".
-uint8_t mqtt_handle_received_pingresp(char *buffer, uint32_t len)
-{
-	logger_log("[mqtt] PINGREQ response received: PINGRESP");
-	PingRespMessage message;
-	if (mqtt_unpack_pingresp_message(buffer, len, &message))
-	{
-		log_message(&message);
-		lc_mqtt.pong_received = TRUE;
-		return TRUE;
-	}
-	else 
-	{
-		logger_log("[mqtt] Error parsing PINGRESP message");
-		return FALSE;
-	}
-}
-
-// A SUBACK message is sent by the server to the client to confirm receipt of a
-// SUBSCRIBE message. A SUBACK message contains a list of granted QoS levels. 
-// The order of granted QoS levels in the SUBACK message matches the order of 
-// the topic names in the corresponding SUBSCRIBE message.
-uint8_t mqtt_handle_received_suback(char *buffer, uint32_t len)
-{
-	logger_log("[mqtt] SUBSCRIBE response received: SUBACK");
-	SubAckMessage message;
-	if (mqtt_unpack_suback_message(buffer, len, &message))
-	{
-		log_message(&message);
-		return TRUE;
-	}
-	else 
-	{
-		logger_log("[mqtt] Error parsing PINGRESP message");
-		return FALSE;
-	}
-}
-
-///////////////////////////////////////////////////////////////////////////////
 // Received Publish message handler
 ///////////////////////////////////////////////////////////////////////////////
 uint8_t mqtt_poll_publish_messages(PublishMessage *received_message)
@@ -242,6 +197,7 @@ uint8_t mqtt_poll_publish_messages(PublishMessage *received_message)
 
 	return FALSE;
 }
+
 
 ///////////////////////////////////////////////////////////////////////////////
 // Received Publish response handler
