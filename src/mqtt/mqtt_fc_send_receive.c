@@ -20,9 +20,14 @@
 #include "utils.h"
 #include "circular_buffer.h"
 
-void mqtt_set_circular_buffer(Mqtt *mqtt, CircularBuffer *ptr_buffer)
+void mqtt_set_circular_buffer_rx(Mqtt *mqtt, CircularBuffer *ptr_buffer)
 {
-	mqtt->circular_buffer = ptr_buffer;
+	mqtt->circular_buffer_rx = ptr_buffer;
+}
+
+void mqtt_set_circular_buffer_tx(Mqtt *mqtt, CircularBuffer *ptr_buffer)
+{
+	mqtt->circular_buffer_tx = ptr_buffer;
 }
 
 uint8_t mqtt_send(void * message)
@@ -144,12 +149,12 @@ void mqtt_rx_poll(Mqtt *mqtt)
 	char buffer[256];
 	uint32_t len = 0;
 		
-	if (buffer_is_empty(mqtt->circular_buffer))
+	if (buffer_is_empty(mqtt->circular_buffer_rx))
 	{
 		return;
 	}
 
-	len = buffer_pop_array(mqtt->circular_buffer, buffer);
+	len = buffer_pop_array(mqtt->circular_buffer_rx, buffer);
 
 	if (len > 0)
 	{

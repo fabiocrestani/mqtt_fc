@@ -98,13 +98,28 @@ uint8_t tcp_disconnect()
 
 uint8_t tcp_send(char buffer[], uint32_t len)
 {
-	int n;
-    n = write(sockfd, buffer, len);
-    if (n < 0)
-    {
-        printf("ERROR writing to socket\n");
-		return FALSE;
-    }
+	int n = 0;
+	uint32_t blocks = 0;
+
+	while (n < (int) len)
+	{
+	    n += write(sockfd, buffer, len);
+	    if (n < 0)
+	    {
+	        printf("ERROR writing to socket\n");
+			return FALSE;
+	    }
+
+		if (blocks++ > 2048)
+		{
+			printf("ERROR writing to socket: Possible infinite loop?");
+			return FALSE;
+		}
+	}
+
+	#ifdef TCP_VERBOSE
+		printf("[tcp] %d bytes sent\n", len);
+	#endif
 
 	return TRUE;
 }
@@ -137,6 +152,9 @@ void tcp_poll_rx(void)
 		if (len > 0)
 		{
 			buffer_put_array(circular_buffer, buffer, len);
+			#ifdef TCP_VERBOSE
+				printf("[tcp] %d bytes received\n", len);
+			#endif
 		}
 
 	} while (len > 0);

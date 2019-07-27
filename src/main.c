@@ -26,6 +26,7 @@
 char temp[512];
 
 CircularBuffer mqtt_rx_buffer;
+CircularBuffer mqtt_tx_buffer;
 
 int main(int argc, char *argv[])
 {
@@ -43,13 +44,14 @@ int main(int argc, char *argv[])
 		mqtt_tcp_connect_set_server_port(mqtt, atoi(argv[2]));
 	}
 
-	timer_init(&timer_mqtt_fsm, TIMER_PERIOD_1_MS, 1000);
+	timer_init(&timer_mqtt_fsm, TIMER_PERIOD_1_MS*1000, 1);
 	timer_start(&timer_mqtt_fsm);
 
 	tcp_set_circular_buffer(&mqtt_rx_buffer);
 	tcp_set_socket_non_blocking();
 
-	mqtt_set_circular_buffer(mqtt, &mqtt_rx_buffer);
+	mqtt_set_circular_buffer_rx(mqtt, &mqtt_rx_buffer);
+	mqtt_set_circular_buffer_tx(mqtt, &mqtt_tx_buffer);
 	mqtt_start(mqtt);
 
 	while (1)
@@ -58,6 +60,8 @@ int main(int argc, char *argv[])
 
 		mqtt_poll(mqtt);
 
+		// Dummy sensor produces data and puts in mqtt tx queue
+		//dummy_sensor_poll();
 	
 		//usleep(1000*1000);
 	}

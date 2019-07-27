@@ -28,7 +28,7 @@ uint8_t timer_init(Timer *timer, uint32_t period_us, uint32_t counter_max)
 	timer->period_us = period_us;
 	timer->counter_max = counter_max;
 
-	printf("timer_init Timer initialized with period of %u us (%0.3f s) \n", 
+	printf("timer_init Timer initialized with period of %u us (%0.6f s) \n", 
 		period_us, (period_us / 1000000.0));
 
 	return TRUE;

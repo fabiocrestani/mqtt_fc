@@ -41,6 +41,8 @@ extern Timer timer_mqtt_fsm;
 
 // Retries
 #define TCP_CONNECT_MAX_RETRIES (5)
+#define MQTT_MAX_PING_TIMEOUT (4)
+#define MQTT_PING_RESPONSE_MAX_RETRIES (4)
 
 ///////////////////////////////////////////////////////////////////////////////
 // ENUMS
@@ -82,8 +84,9 @@ typedef enum EConnakReturnCode_ {
 // STRUCTS
 ///////////////////////////////////////////////////////////////////////////////
 typedef struct Mqtt_ {
-	// Buffer	
-	CircularBuffer *circular_buffer;
+	// Buffers
+	CircularBuffer *circular_buffer_rx;
+	CircularBuffer *circular_buffer_tx;
 
 	// Server address and port
 	char server_address[512];
@@ -93,9 +96,11 @@ typedef struct Mqtt_ {
 	EMqttState state;
 	EMqttSubstate substate;
 	uint32_t retries;
+	uint32_t ping_timeout;
 	
 	// Flags
 	uint8_t connected;
+	uint8_t pong_received;
 
 } Mqtt;
 
@@ -311,6 +316,7 @@ typedef struct DisconnectMessage_ {
 void error(char *msg);
 void mqtt_init(void);
 void mqtt_start(Mqtt *mqtt);
+void mqtt_restart(Mqtt *mqtt);
 Mqtt * mqtt_get_instance(void);
 
 // Commands

@@ -53,10 +53,23 @@ void mqtt_init(void)
 	lc_mqtt.state = E_MQTT_STATE_IDLE;
 	lc_mqtt.substate = E_MQTT_SUBSTATE_SEND;
 	lc_mqtt.retries = 0;
+	lc_mqtt.ping_timeout = 0;
+	lc_mqtt.pong_received = FALSE;
 }
 
 void mqtt_start(Mqtt *mqtt)
 {
+	mqtt_fsm_set_state(mqtt, E_MQTT_STATE_TCP_CONNECT);
+}
+
+void mqtt_restart(Mqtt *mqtt)
+{
+	lc_mqtt.connected = FALSE;
+	lc_mqtt.state = E_MQTT_STATE_IDLE;
+	lc_mqtt.substate = E_MQTT_SUBSTATE_SEND;
+	lc_mqtt.retries = 0;
+	lc_mqtt.ping_timeout = 0;
+	lc_mqtt.pong_received = FALSE;
 	mqtt_fsm_set_state(mqtt, E_MQTT_STATE_TCP_CONNECT);
 }
 
@@ -174,6 +187,7 @@ uint8_t mqtt_handle_received_pingresp(char *buffer, uint32_t len)
 	if (mqtt_unpack_pingresp_message(buffer, len, &message))
 	{
 		log_message(&message);
+		lc_mqtt.pong_received = TRUE;
 		return TRUE;
 	}
 	else 

@@ -20,26 +20,31 @@
 #include "logger.h"
 #include "utils.h"
 
-
 char * mqtt_fsm_translate_state(EMqttState state);
 
 void mqtt_state_idle(Mqtt *mqtt);
 void mqtt_state_tcp_connect(Mqtt *mqtt);
 void mqtt_state_connect(Mqtt *mqtt);
+void mqtt_state_connected(Mqtt *mqtt);
+void mqtt_state_ping(Mqtt *mqtt);
 
 void mqtt_fsm_set_state(Mqtt *mqtt, EMqttState new_state)
 {
 	mqtt->state = new_state;
-	mqtt->substate = E_MQTT_SUBSTATE_SEND; 
+	mqtt->substate = E_MQTT_SUBSTATE_SEND;
+	mqtt->retries = 0;
 }
 
-void mqtt_fsm_set_error_state(EMqttState origin)
+void mqtt_fsm_set_error_state(Mqtt *mqtt, EMqttState origin)
 {
 	char temp[512];
 	sprintf(temp , "FATAL ERROR! Error in MQTT state %s (%d)", 
 		mqtt_fsm_translate_state(origin), origin);
 	logger_log(temp);
-	exit(1);
+
+	logger_log("Reseting application in 10 seconds");
+	sleep(10);
+	mqtt_restart(mqtt);
 }
 
 char * mqtt_fsm_translate_state(EMqttState state)
@@ -49,6 +54,7 @@ char * mqtt_fsm_translate_state(EMqttState state)
 		case E_MQTT_STATE_IDLE: return "E_MQTT_STATE_IDLE";
 		case E_MQTT_STATE_TCP_CONNECT: return "E_MQTT_STATE_TCP_CONNECT";
 		case E_MQTT_STATE_CONNECT: return "E_MQTT_STATE_CONNECT";
+		case E_MQTT_STATE_CONNECTED: return "E_MQTT_STATE_CONNECTED";
 		case E_MQTT_STATE_ERROR: return "E_MQTT_STATE_ERROR";
 		case E_MQTT_STATE_SUBSCRIBE: return "E_MQTT_STATE_SUBSCRIBE";
 		case E_MQTT_STATE_POOL_LOCAL_DATA: return "E_MQTT_STATE_POOL_LOCAL_DATA";
@@ -89,12 +95,13 @@ void mqtt_fsm_poll(Mqtt *mqtt)
 		case E_MQTT_STATE_IDLE: mqtt_state_idle(mqtt); break;
 		case E_MQTT_STATE_TCP_CONNECT: mqtt_state_tcp_connect(mqtt); break;
 		case E_MQTT_STATE_CONNECT: mqtt_state_connect(mqtt); break;
+		case E_MQTT_STATE_CONNECTED: mqtt_state_connected(mqtt); break;
+		case E_MQTT_STATE_PING: mqtt_state_ping(mqtt); break;
 
 		case E_MQTT_STATE_ERROR:
 		case E_MQTT_STATE_SUBSCRIBE:
 		case E_MQTT_STATE_POOL_LOCAL_DATA:
 		case E_MQTT_STATE_POOL_REMOTE_DATA:
-		case E_MQTT_STATE_PING:
 		default:
 			sprintf(temp, "Invalid state: %d", mqtt->state);
 			logger_log(temp);
@@ -138,7 +145,7 @@ void mqtt_state_tcp_connect(Mqtt *mqtt)
 			if (mqtt->retries >= TCP_CONNECT_MAX_RETRIES)
 			{
 				logger_log("[tcp] Max retries exceeded.");
-				mqtt_fsm_set_error_state(E_MQTT_STATE_TCP_CONNECT);
+				mqtt_fsm_set_error_state(mqtt, E_MQTT_STATE_TCP_CONNECT);
 			}
 		}
 	}
@@ -163,6 +170,7 @@ void mqtt_state_connect(Mqtt *mqtt)
 		if (mqtt->connected)
 		{
 			logger_log("[mqtt] Connected");
+			mqtt_fsm_set_state(mqtt, E_MQTT_STATE_CONNECTED);
 		}
 		else
 		{
@@ -172,7 +180,67 @@ void mqtt_state_connect(Mqtt *mqtt)
 	}	
 }
 
+///////////////////////////////////////////////////////////////////////////
+// Connected
+///////////////////////////////////////////////////////////////////////////
+void mqtt_state_connected(Mqtt *mqtt)
+{
+	if (mqtt->substate == E_MQTT_SUBSTATE_SEND)
+	{
+		mqtt->substate = E_MQTT_SUBSTATE_WAIT;
+	}
 
+	if (mqtt->substate == E_MQTT_SUBSTATE_WAIT)
+	{
+		// TODO
+		// Check if there is any data in the output buffer
+		// If yes, send the data and reset the ping timeout
+
+		// Sends ping
+		if ((mqtt->ping_timeout)++ >= MQTT_MAX_PING_TIMEOUT)
+		{
+			mqtt_fsm_set_state(mqtt, E_MQTT_STATE_PING);
+			mqtt->ping_timeout = 0;
+		}
+	}
+}
+			
+
+///////////////////////////////////////////////////////////////////////////
+// Ping
+///////////////////////////////////////////////////////////////////////////
+void mqtt_state_ping(Mqtt *mqtt)
+{
+	if (mqtt->substate == E_MQTT_SUBSTATE_SEND)
+	{
+		// Sends ping request
+		mqtt_ping_request();
+		mqtt->pong_received = FALSE;
+		mqtt->substate = E_MQTT_SUBSTATE_WAIT;
+	} 
+	else if (mqtt->substate == E_MQTT_SUBSTATE_WAIT)
+	{
+		// Waits for a response
+		if (mqtt->pong_received == TRUE)
+		{
+			logger_log("[mqtt] Pong received!");
+			mqtt_fsm_set_state(mqtt, E_MQTT_STATE_CONNECTED);
+		}
+		else
+		{
+			logger_log("[mqtt] Waiting response from PING");
+			(mqtt->retries)++;
+			if (mqtt->retries >= MQTT_PING_RESPONSE_MAX_RETRIES)
+			{
+				char temp[512];
+				sprintf(temp, "[mqtt] Ping max retries exceeded (%d).",
+					mqtt->retries);
+				logger_log(temp);
+				mqtt_fsm_set_state(mqtt, E_MQTT_STATE_CONNECTED);
+			}
+		}
+	}	
+}
 	
 
 
