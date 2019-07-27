@@ -33,7 +33,7 @@ FixedHeader mqtt_build_fixed_header(uint8_t message_type, uint8_t dup,
 	header.retain = retain;
 	header.remaining_length = remaining_length;
 
-	if (header.qos == 0)
+	if ((header.qos == 0) && (header.remaining_length >= 2))
 	{
 		header.remaining_length = remaining_length - 2;
 	}
