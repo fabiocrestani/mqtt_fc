@@ -11,6 +11,7 @@
 
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <sys/time.h>
 #include <netinet/in.h>
 #include <netdb.h>
 
@@ -49,17 +50,18 @@ void mqtt_init(void)
 	lc_mqtt.connected = FALSE;
 	strcpy(lc_mqtt.server_address, default_server_address);
 	lc_mqtt.server_port = default_server_port;
-
 	lc_mqtt.state = E_MQTT_STATE_IDLE;
 	lc_mqtt.substate = E_MQTT_SUBSTATE_SEND;
 	lc_mqtt.retries = 0;
 	lc_mqtt.ping_timeout = 0;
 	lc_mqtt.pong_received = FALSE;
+	lc_mqtt.ping_start_us = 0;
 	lc_mqtt.is_all_topics_subscribed = FALSE;
 	lc_mqtt.wait_for_topic_subscribe = FALSE;
 	lc_mqtt.subscribe_topics_number = 0;
 	lc_mqtt.subscribe_topics_subscribed = 0;
 	lc_mqtt.received_publish_counter = 0;
+	lc_mqtt.publish_message_queue_index = 0;
 }
 
 void mqtt_start(Mqtt *mqtt)
@@ -75,10 +77,12 @@ void mqtt_restart(Mqtt *mqtt)
 	lc_mqtt.retries = 0;
 	lc_mqtt.ping_timeout = 0;
 	lc_mqtt.pong_received = FALSE;
+	lc_mqtt.ping_start_us = 0;
 	lc_mqtt.is_all_topics_subscribed = FALSE;
 	lc_mqtt.wait_for_topic_subscribe = FALSE;
 	lc_mqtt.subscribe_topics_subscribed = 0;
 	lc_mqtt.received_publish_counter = 0;
+	lc_mqtt.publish_message_queue_index = 0;
 	mqtt_fsm_set_state(mqtt, E_MQTT_STATE_TCP_CONNECT);
 }
 
@@ -115,7 +119,8 @@ void mqtt_set_subscribe_topics(Mqtt *mqtt,
 
 	if (mqtt->subscribe_topics_number != num_topics)
 	{
-		sprintf(temp, "WARNING: Not all topics could be added to the list (%d added)", 
+		sprintf(temp, 
+			"WARNING: Not all topics could be added to the list (%d added)", 
 			mqtt->subscribe_topics_number);
 		logger_log_mqtt(temp);
 	}
@@ -158,9 +163,15 @@ uint8_t mqtt_publish(char topic_to_publish[], char message_to_publish[],
 // connected client to the server
 uint8_t mqtt_ping_request(void)
 {
+	struct timeval tv;
+
 	PingReqMessage ping_message;
 	ping_message = mqtt_build_ping_message();
 	mqtt_send((void *) &ping_message);
+
+	gettimeofday(&tv, NULL);
+	lc_mqtt.ping_start_us = tv.tv_usec;
+
 	return TRUE;
 }
 

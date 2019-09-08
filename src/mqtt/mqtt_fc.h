@@ -303,6 +303,9 @@ typedef struct Mqtt_ {
 	EMqttSubstate substate;
 	uint32_t retries;
 	uint32_t ping_timeout;
+
+	// Ping start timestamp in microseconds
+	uint32_t ping_start_us;
 	
 	// Flags
 	uint8_t connected;

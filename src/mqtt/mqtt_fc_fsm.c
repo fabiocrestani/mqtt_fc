@@ -8,6 +8,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <stdint.h>
+#include <sys/time.h>
 
 #include "mqtt_fc.h"
 #include "mqtt_fc_send_receive.h"
@@ -248,7 +249,14 @@ void mqtt_state_ping(Mqtt *mqtt)
 		// Waits for a response
 		if (mqtt->pong_received == TRUE)
 		{
-			logger_log_mqtt("Pong received!");
+			char temp[512];
+			struct timeval tv;
+			gettimeofday(&tv, NULL);
+			uint32_t ping_stop_us = tv.tv_usec;
+			uint32_t ping_elapsed_us = ping_stop_us - mqtt->ping_start_us;
+
+			sprintf(temp, "PINGRESP received after %d us", ping_elapsed_us);
+			logger_log_mqtt(temp);
 			mqtt_fsm_set_state(mqtt, E_MQTT_STATE_CONNECTED);
 		}
 		else
