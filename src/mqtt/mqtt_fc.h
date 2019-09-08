@@ -341,9 +341,6 @@ uint8_t mqtt_publish(char topic_to_publish[], char message_to_publish[],
 uint8_t mqtt_ping_request(void);
 uint8_t mqtt_subscribe(char topic_to_subscribe[], uint8_t requested_qos);
 
-// Polling for remote Publish messages
-uint8_t mqtt_poll_publish_messages(PublishMessage *received_message);
-
 // Response for remote Publish messages
 uint8_t	mqtt_send_response_to_publish_message(PublishMessage publish_message);
 uint8_t mqtt_get_last_publish_received_message(Mqtt *mqtt, PublishMessage *message);

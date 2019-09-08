@@ -40,5 +40,5 @@ void dummy_sensor_poll(void)
 	
 	char temp[512];
 	sprintf(temp, "[sensor_dummy] Temperature is %0.3f °C", temperature);
-	logger_log(temp);
+	//logger_log(temp);
 }

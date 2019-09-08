@@ -33,7 +33,7 @@ uint8_t tcp_connect(char server_address[], uint32_t server_port)
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockfd < 0)
     {
-        printf("ERROR opening socket\n");
+        logger_err("ERROR opening socket\n");
 		return FALSE;
     }
 
@@ -42,7 +42,7 @@ uint8_t tcp_connect(char server_address[], uint32_t server_port)
 
     if (server == NULL)
     {
-        printf("ERROR, no such host\n");
+        logger_err("ERROR, no such host\n");
         return FALSE;
     }
 
@@ -70,12 +70,12 @@ uint8_t tcp_connect(char server_address[], uint32_t server_port)
         }
     }
 
-	sprintf(temp, "[tcp_connect] Error connecting to server %s:%d", 
+	sprintf(temp, "Error connecting to server %s:%d", 
 		server_address, server_port);
-	logger_log(temp);
-	sprintf(temp, "[tcp_connect] TCP connect exceeded max timeout (%d seconds)",
+	logger_log_tcp(temp);
+	sprintf(temp, "TCP connect exceeded max timeout (%d seconds)",
 		TCP_DEFAULT_CONNECT_TIMEOUT_S);
-	logger_log(temp);
+	logger_log_tcp(temp);
 
 	return FALSE;
 }
@@ -106,13 +106,13 @@ uint8_t tcp_send(char buffer[], uint32_t len)
 	    n += write(sockfd, buffer, len);
 	    if (n < 0)
 	    {
-	        printf("ERROR writing to socket\n");
+	        logger_err("ERROR writing to socket\n");
 			return FALSE;
 	    }
 
 		if (blocks++ > 2048)
 		{
-			printf("ERROR writing to socket: Possible infinite loop?");
+			logger_err("ERROR writing to socket: Possible infinite loop?");
 			return FALSE;
 		}
 	}

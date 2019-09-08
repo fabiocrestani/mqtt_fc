@@ -7,6 +7,8 @@
 
 #include "circular_buffer.h"
 
+// TODO make this buffer generic
+
 void buffer_init(CircularBuffer *buf)
 {
     buf->numEl = 0;

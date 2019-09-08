@@ -108,16 +108,16 @@ void mqtt_set_subscribe_topics(Mqtt *mqtt,
 		strcpy(mqtt->subscribe_topics[i], topics[i]);
 		(mqtt->subscribe_topics_number)++;
 
-		sprintf(temp, "[mqtt] Topic \"%s\" was added to list of subscribed topics", 
+		sprintf(temp, "Topic \"%s\" was added to list of subscribed topics", 
 			mqtt->subscribe_topics[i]);
-		logger_log(temp);
+		logger_log_mqtt(temp);
 	}
 
 	if (mqtt->subscribe_topics_number != num_topics)
 	{
-		sprintf(temp, "[mqtt] WARNING: Not all topics could be added to the list (%d added)", 
+		sprintf(temp, "WARNING: Not all topics could be added to the list (%d added)", 
 			mqtt->subscribe_topics_number);
-		logger_log(temp);
+		logger_log_mqtt(temp);
 	}
 }
 
@@ -176,32 +176,6 @@ uint8_t mqtt_subscribe(char topic_to_subscribe[], uint8_t requested_qos)
 							mqtt_get_new_message_id(), requested_qos);
 	mqtt_send((void *) &subscribe_message);
 	return TRUE;
-}
-
-///////////////////////////////////////////////////////////////////////////////
-// Received Publish message handler
-///////////////////////////////////////////////////////////////////////////////
-uint8_t mqtt_poll_publish_messages(PublishMessage *received_message)
-{
-	(void) received_message;
-	// FIXME
-	/*char buffer[1024];
-	uint32_t len;
-	FixedHeader header;
-
-	mqtt_poll_receive(buffer, &len);
-
-	if (mqtt_unpack_fixed_header(buffer, len, &header))
-	{
-		if (header.message_type == PUBLISH)
-		{
-			mqtt_unpack_publish_message(buffer, len, received_message);
-			return TRUE;	
-		}
-	}
-	*/
-
-	return FALSE;
 }
 
 ///////////////////////////////////////////////////////////////////////////////

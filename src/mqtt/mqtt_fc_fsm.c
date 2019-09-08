@@ -159,7 +159,7 @@ void mqtt_state_connect(Mqtt *mqtt)
 {
 	if (mqtt->substate == E_MQTT_SUBSTATE_SEND)
 	{
-		logger_log("[mqtt] Sending CONNECT message");
+		logger_log_mqtt("Sending CONNECT message");
 		char mqtt_protocol_name[] = "MQTT";
 		char mqtt_client_id[] = "fabio";
 		mqtt_connect(mqtt_protocol_name, mqtt_client_id);
@@ -170,13 +170,13 @@ void mqtt_state_connect(Mqtt *mqtt)
 	{
 		if (mqtt->connected)
 		{
-			logger_log("[mqtt] Connected");
+			logger_log_mqtt("Connected");
 			mqtt_fsm_set_state(mqtt, E_MQTT_STATE_CONNECTED);
 		}
 		else
 		{
 			// TODO add retries counter
-			logger_log("[mqtt] Waiting response from connect");
+			logger_log_mqtt("Waiting response from connect");
 		}
 	}	
 }
@@ -209,9 +209,9 @@ void mqtt_state_connected(Mqtt *mqtt)
 			PublishMessage message;
 			if (mqtt_get_last_publish_received_message(mqtt, &message))
 			{
-				sprintf(temp, "[mqtt] PUBLISH payload is (%d): %s",
+				sprintf(temp, "PUBLISH payload is (%d): %s",
 					message.payload_len, message.payload);
-				logger_log(temp);
+				logger_log_mqtt(temp);
 				mqtt_reset_ping_timeout(mqtt);
 				return;
 			}
@@ -248,19 +248,19 @@ void mqtt_state_ping(Mqtt *mqtt)
 		// Waits for a response
 		if (mqtt->pong_received == TRUE)
 		{
-			logger_log("[mqtt] Pong received!");
+			logger_log_mqtt("Pong received!");
 			mqtt_fsm_set_state(mqtt, E_MQTT_STATE_CONNECTED);
 		}
 		else
 		{
-			logger_log("[mqtt] Waiting response from PING");
+			logger_log_mqtt("Waiting response from PING");
 			(mqtt->retries)++;
 			if (mqtt->retries >= MQTT_PING_RESPONSE_MAX_RETRIES)
 			{
 				char temp[512];
-				sprintf(temp, "[mqtt] Ping max retries exceeded (%d).",
+				sprintf(temp, "Ping max retries exceeded (%d).",
 					mqtt->retries);
-				logger_log(temp);
+				logger_log_mqtt(temp);
 				mqtt_fsm_set_state(mqtt, E_MQTT_STATE_CONNECTED);
 			}
 		}
@@ -281,9 +281,9 @@ void mqtt_state_subscribe(Mqtt *mqtt)
 				(mqtt->subscribe_topics_subscribed < mqtt->subscribe_topics_number))
 		{
 			// Send subscribe message
-			sprintf(temp, "[mqtt] Sending SUBSCRIBE to topic \"%s\"", 
+			sprintf(temp, "Sending SUBSCRIBE to topic \"%s\"", 
 				mqtt->subscribe_topics[mqtt->subscribe_topics_subscribed]);
-			logger_log(temp);
+			logger_log_mqtt(temp);
 			mqtt_subscribe(
 				mqtt->subscribe_topics[mqtt->subscribe_topics_subscribed], 1);
 			mqtt->wait_for_topic_subscribe = TRUE;
@@ -292,9 +292,9 @@ void mqtt_state_subscribe(Mqtt *mqtt)
 		// All topics subscribed
 		else
 		{
-			sprintf(temp, "[mqtt] All topics subscribed (%d)",
+			sprintf(temp, "All topics subscribed (%d)",
 				mqtt->subscribe_topics_subscribed);
-			logger_log(temp);
+			logger_log_mqtt(temp);
 			mqtt->is_all_topics_subscribed = TRUE;
 			mqtt_fsm_set_state(mqtt, E_MQTT_STATE_CONNECTED);
 		}
@@ -304,14 +304,14 @@ void mqtt_state_subscribe(Mqtt *mqtt)
 	{
 		if (mqtt->wait_for_topic_subscribe)
 		{
-			logger_log("[mqtt] Waiting response from SUBSCRIBE");
+			logger_log_mqtt("Waiting response from SUBSCRIBE");
 			(mqtt->retries)++;
 			if (mqtt->retries >= MQTT_SUBSCRIBE_RESPONSE_MAX_RETRIES)
 			{
 				char temp[512];
-				sprintf(temp, "[mqtt] SUBSCRIBE max retries exceeded (%d).",
+				sprintf(temp, "SUBSCRIBE max retries exceeded (%d).",
 					mqtt->retries);
-				logger_log(temp);
+				logger_log_mqtt(temp);
 				(mqtt->subscribe_topics_subscribed)++;
 				mqtt->wait_for_topic_subscribe = FALSE;
 				mqtt_fsm_set_state(mqtt, E_MQTT_STATE_SUBSCRIBE);

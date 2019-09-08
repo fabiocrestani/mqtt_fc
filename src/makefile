@@ -26,7 +26,7 @@ $(BUILDDIR)/%.o: %.c
 	$(CC) -c -o $@ $< $(CFLAGS)
 
 run: mqtt_fc
-	./$(BUILDDIR)/mqtt_fc #broker.hivemq.com 1883
+	./$(BUILDDIR)/mqtt_fc mqtt.eclipse.org 1883 #broker.hivemq.com 1883
 
 clean:
 	-$(RM) $(BUILDDIR)/*.o $(BUILDDIR)/mqtt_fc

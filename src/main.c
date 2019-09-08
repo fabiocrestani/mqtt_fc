@@ -32,7 +32,14 @@ int main(int argc, char *argv[])
 	char topics_to_subscribe[3][MQTT_TOPIC_NAME_MAX_LEN] = 
 		{{"topic_1"}, {"topic_2"}, {"topic_3"}};
 
-	printf("\nmqtt_fc\n");
+	printf("\n\
+*********************************************************************\n\
+*                                                                   *\n\
+* MQTT FC                                                           *\n\
+* Author: Fabio Crestani                                            *\n\
+* Version: 0.1                                                      *\n\
+*                                                                   *\n\
+*********************************************************************\n\n");
 	mqtt_init();
 	Mqtt *mqtt = mqtt_get_instance();
 	
@@ -60,6 +67,7 @@ int main(int argc, char *argv[])
 	timer_init(&timer_sensor_dummy, TIMER_PERIOD_1_S * 5, 1);
 	timer_start(&timer_sensor_dummy);
 
+	printf("\n");
 	while (1)
 	{
 		// Polls TCP for input/output of data
@@ -79,7 +87,7 @@ int main(int argc, char *argv[])
 	///////////////////////////////////////////////////////////////////////////
 	// Publish
 	///////////////////////////////////////////////////////////////////////////
-	logger_log("[mqtt] Sending PUBLISH message");
+	logger_log_mqtt("Sending PUBLISH message");
 	char topic_to_publish[] = "abcd";
 	//char message_to_publish[] = "hello world :)";
 	char message_to_publish[] = "2";

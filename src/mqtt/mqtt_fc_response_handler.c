@@ -36,7 +36,7 @@ uint8_t mqtt_handle_received_connack(char *buffer, uint32_t len)
 {
 	Mqtt *mqtt = mqtt_get_instance();
 
-	logger_log("[mqtt] CONNECT response received: CONNACK");
+	logger_log_mqtt("CONNECT response received: CONNACK");
 	ConnackMessage connack_message;
 	if (mqtt_unpack_connack_message(buffer, len, &connack_message))
 	{
@@ -46,7 +46,7 @@ uint8_t mqtt_handle_received_connack(char *buffer, uint32_t len)
 	}
 	else 
 	{
-		logger_log("[mqtt] Error parsing CONNACK message");
+		logger_log_mqtt("Error parsing CONNACK message");
 		return FALSE;
 	}
 }
@@ -57,7 +57,7 @@ uint8_t mqtt_handle_received_connack(char *buffer, uint32_t len)
 // the server.
 uint8_t mqtt_handle_received_puback(char *buffer, uint32_t len)
 {
-	logger_log("[mqtt] PUBLISH response received: PUBACK");
+	logger_log_mqtt("PUBLISH response received: PUBACK");
 	PubAckMessage puback_message;
 	if (mqtt_unpack_puback_message(buffer, len, &puback_message))
 	{
@@ -66,7 +66,7 @@ uint8_t mqtt_handle_received_puback(char *buffer, uint32_t len)
 	}
 	else 
 	{
-		logger_log("[mqtt] Error parsing PUBACK message");
+		logger_log_mqtt("Error parsing PUBACK message");
 		return FALSE;
 	}
 }
@@ -77,7 +77,7 @@ uint8_t mqtt_handle_received_pingresp(char *buffer, uint32_t len)
 {
 	Mqtt *mqtt = mqtt_get_instance();
 
-	logger_log("[mqtt] PINGREQ response received: PINGRESP");
+	logger_log_mqtt("PINGREQ response received: PINGRESP");
 	PingRespMessage message;
 	if (mqtt_unpack_pingresp_message(buffer, len, &message))
 	{
@@ -87,7 +87,7 @@ uint8_t mqtt_handle_received_pingresp(char *buffer, uint32_t len)
 	}
 	else 
 	{
-		logger_log("[mqtt] Error parsing PINGRESP message");
+		logger_log_mqtt("Error parsing PINGRESP message");
 		return FALSE;
 	}
 }
@@ -100,7 +100,7 @@ uint8_t mqtt_handle_received_suback(char *buffer, uint32_t len)
 {
 	Mqtt *mqtt = mqtt_get_instance();
 
-	logger_log("[mqtt] SUBSCRIBE response received: SUBACK");
+	logger_log_mqtt("SUBSCRIBE response received: SUBACK");
 	SubAckMessage message;
 	if (mqtt_unpack_suback_message(buffer, len, &message))
 	{
@@ -110,7 +110,7 @@ uint8_t mqtt_handle_received_suback(char *buffer, uint32_t len)
 	}
 	else 
 	{
-		logger_log("[mqtt] Error parsing PINGRESP message");
+		logger_log_mqtt("Error parsing PINGRESP message");
 		return FALSE;
 	}
 }
@@ -127,7 +127,7 @@ uint8_t mqtt_handle_received_publish(char *buffer, uint32_t len)
 {
 	Mqtt *mqtt = mqtt_get_instance();
 
-	logger_log("[mqtt] PUBLISH message received");
+	logger_log_mqtt("PUBLISH message received");
 	PublishMessage message;
 	if (mqtt_unpack_publish_message(buffer, len, &message))
 	{
@@ -136,7 +136,7 @@ uint8_t mqtt_handle_received_publish(char *buffer, uint32_t len)
 	}
 	else 
 	{
-		logger_log("[mqtt] Error parsing PUBLISH message");
+		logger_log_mqtt("Error parsing PUBLISH message");
 		return FALSE;
 	}
 }
@@ -146,7 +146,7 @@ void mqtt_queue_received_publish(Mqtt *mqtt, PublishMessage *message)
 {
 	if (mqtt->received_publish_counter >= MQTT_RECEIVED_PUBLISH_QUEUE_SIZE)
 	{
-		logger_log("[mqtt] Error! Queue of received publish messages is full!");
+		logger_log_mqtt("Error! Queue of received publish messages is full!");
 		return;
 	}
 

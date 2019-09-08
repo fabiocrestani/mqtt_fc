@@ -19,6 +19,7 @@ void logger_print_separator(void);
 
 const char * translate_qos(uint8_t qos);
 const char * translate_true_false(uint8_t input);
+char * get_color_code(ELogColor color);
 
 void dump(char *data, uint32_t len)
 {
@@ -109,6 +110,58 @@ void logger_log(char buffer[])
 {
 	logger_print_timestamp();
 	printf(" %s\n", buffer);
+}
+
+void logger_log2(char header[], char text[], ELogColor color)
+{
+	logger_print_timestamp();
+#if LOG_COLORED==TRUE
+	printf(" %s[%s]%s %s\n", get_color_code(color), header, 
+		get_color_code(COLOR_RESET), text);
+#else
+	printf(" [%s] %s\n", header, text);
+	(void) color;
+#endif
+}
+
+void logger_err(char buffer[])
+{
+	logger_print_timestamp();
+#if LOG_COLORED==TRUE
+	printf(" %s%s%s\n", get_color_code(COLOR_RED), get_color_code(COLOR_RESET), 
+		buffer);
+#else
+	printf(" %s\n", buffer);
+#endif
+}
+
+char * get_color_code(ELogColor color)
+{
+	switch (color)
+	{
+		case COLOR_RED: return "\033[0;31m";
+		case COLOR_GREEN: return "\033[0;32m";
+		case COLOR_GREEN_BOLD: return "\033[1;32m";
+		case COLOR_YELLOW: return "\033[0;33m";
+		case COLOR_YELLOW_BOLD: return "\033[1;33m";
+		case COLOR_BLUE: return "\033[0;34m";
+		case COLOR_BLUE_BOLD: return "\033[1;34m";
+		case COLOR_MAGENTA: return "\033[0;35m";
+		case COLOR_MAGENTA_BOLD: return "\033[1;35m";
+		case COLOR_CYAN: return "\033[0;36m";
+		case COLOR_CYAN_BOLD: return "\033[1;36m";
+		case COLOR_RESET: default: return "\033[0m";
+	}
+}
+
+void logger_log_tcp(char buffer[])
+{
+	logger_log2("tcp", buffer, COLOR_BLUE);
+}
+
+void logger_log_mqtt(char buffer[])
+{
+	logger_log2("mqtt", buffer, COLOR_GREEN);
 }
 
 void dump_parsed_fixed_header(FixedHeader header)
