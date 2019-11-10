@@ -12,5 +12,4 @@
 
 #define LIMITER(x, y) ((x <= y) ? x : y)
 
-
 #endif // __UTILS_H__

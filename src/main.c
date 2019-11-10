@@ -76,24 +76,12 @@ int main(int argc, char *argv[])
 		// Polls MQTT main FSM
 		mqtt_poll(mqtt);
 
-		// Dummy sensor produces data and puts in mqtt tx queue
+		// Dummy sensor produces data and puts in mqtt_tx_buffer
 		dummy_sensor_poll();
 	
 		usleep(1000*1000);
 	}
 
-
-/*	
-	///////////////////////////////////////////////////////////////////////////
-	// Publish
-	///////////////////////////////////////////////////////////////////////////
-	logger_log_mqtt("Sending PUBLISH message");
-	char topic_to_publish[] = "abcd";
-	//char message_to_publish[] = "hello world :)";
-	char message_to_publish[] = "2";
-	mqtt_publish(topic_to_publish, message_to_publish, E_QOS_PUBACK);
-	mqtt_receive_response();
-*/
 
 
 

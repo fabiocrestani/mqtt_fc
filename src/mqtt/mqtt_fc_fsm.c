@@ -20,6 +20,7 @@
 #include "tcp.h"
 #include "logger.h"
 #include "utils.h"
+#include "date.h"
 
 char * mqtt_fsm_translate_state(EMqttState state);
 
@@ -173,6 +174,14 @@ void mqtt_state_connect(Mqtt *mqtt)
 		{
 			logger_log_mqtt("Connected");
 			mqtt_fsm_set_state(mqtt, E_MQTT_STATE_CONNECTED);
+
+			// Publish hello world message
+			logger_log_mqtt("Sending Hello World PUBLISH message");
+			char topic_to_publish[] = "topic_1";
+			char message_to_publish[512];
+			sprintf(message_to_publish, "Hello World in %s (%s)",
+				topic_to_publish, get_current_date_time());
+			mqtt_publish(topic_to_publish, message_to_publish, E_QOS_PUBACK);
 		}
 		else
 		{
