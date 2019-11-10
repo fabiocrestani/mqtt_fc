@@ -20,6 +20,7 @@ void logger_print_separator(void);
 const char * translate_qos(uint8_t qos);
 const char * translate_true_false(uint8_t input);
 char * get_color_code(ELogColor color);
+char * get_type_string(ELogType type);
 
 void dump(char *data, uint32_t len)
 {
@@ -106,12 +107,14 @@ void logger_print_timestamp(void)
 	printf("%s", buffer);
 }
 
+// Standard log message
 void logger_log(char buffer[])
 {
 	logger_print_timestamp();
 	printf(" %s\n", buffer);
 }
 
+// Standard log message + colorization
 void logger_log2(char header[], char text[], ELogColor color)
 {
 	logger_print_timestamp();
@@ -120,6 +123,20 @@ void logger_log2(char header[], char text[], ELogColor color)
 		get_color_code(COLOR_RESET), text);
 #else
 	printf(" [%s] %s\n", header, text);
+	(void) color;
+#endif
+}
+
+// Standard log message + colorization + message type
+void logger_log3(char header[], char text[], ELogColor color, ELogType type)
+{
+	logger_print_timestamp();
+#if LOG_COLORED==TRUE
+	printf(" %s[%s %s%s]%s %s\n", get_color_code(color), header, 
+		get_type_string(type), get_color_code(color), 
+		get_color_code(COLOR_RESET), text);
+#else
+	printf(" [%s %s] %s\n", header, type_string, text);
 	(void) color;
 #endif
 }
@@ -140,6 +157,7 @@ char * get_color_code(ELogColor color)
 	switch (color)
 	{
 		case COLOR_RED: return "\033[0;31m";
+		case COLOR_RED_BOLD: return "\033[1;31m";
 		case COLOR_GREEN: return "\033[0;32m";
 		case COLOR_GREEN_BOLD: return "\033[1;32m";
 		case COLOR_YELLOW: return "\033[0;33m";
@@ -154,14 +172,25 @@ char * get_color_code(ELogColor color)
 	}
 }
 
+char * get_type_string(ELogType type)
+{
+	switch (type)
+	{
+		case TYPE_OUTPUT: return "\033[1;34m>\033[0m";
+		case TYPE_INPUT: return "\033[1;32m<\033[0m";
+		case TYPE_ERROR: return "\033[1;31mx\033[0m";
+		case TYPE_INFO: default: return "\033[1;33m.\033[0m";
+	}
+}
+
 void logger_log_tcp(char buffer[])
 {
 	logger_log2("tcp", buffer, COLOR_BLUE);
 }
 
-void logger_log_mqtt(char buffer[])
+void logger_log_mqtt(ELogType type, char buffer[])
 {
-	logger_log2("mqtt", buffer, COLOR_GREEN);
+	logger_log3("mqtt", buffer, COLOR_GREEN, type);
 }
 
 void dump_parsed_fixed_header(FixedHeader header)

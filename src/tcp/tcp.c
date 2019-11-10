@@ -33,7 +33,7 @@ uint8_t tcp_connect(char server_address[], uint32_t server_port)
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockfd < 0)
     {
-        logger_err("ERROR opening socket\n");
+        logger_err("ERROR opening socket");
 		return FALSE;
     }
 
@@ -42,7 +42,7 @@ uint8_t tcp_connect(char server_address[], uint32_t server_port)
 
     if (server == NULL)
     {
-        logger_err("ERROR, no such host\n");
+        logger_err("ERROR, no such host");
         return FALSE;
     }
 
@@ -106,7 +106,7 @@ uint8_t tcp_send(char buffer[], uint32_t len)
 	    n += write(sockfd, buffer, len);
 	    if (n < 0)
 	    {
-	        logger_err("ERROR writing to socket\n");
+	        logger_err("ERROR writing to socket");
 			return FALSE;
 	    }
 

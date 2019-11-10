@@ -39,6 +39,10 @@ typedef enum EConnakReturnCode_ EConnakReturnCode;
 
 #define LOG_COLORED (TRUE)
 
+// For debugging only
+//#define LOG_MQTT_FSM_POLL
+//#define LOG_TIMER_PROGRESS
+
 typedef enum ELogColor_ {
 	COLOR_RESET,
 	COLOR_RED,
@@ -55,9 +59,12 @@ typedef enum ELogColor_ {
 	COLOR_CYAN_BOLD
 } ELogColor;
 
-// For debugging only
-//#define LOG_MQTT_FSM_POLL
-//#define LOG_TIMER_PROGRESS
+typedef enum ELogType_ {
+	TYPE_OUTPUT,
+	TYPE_INPUT,
+	TYPE_INFO,
+	TYPE_ERROR
+} ELogType;
 
 // Log
 void logger_log(char buffer[]);
@@ -67,7 +74,7 @@ void dump(char *data, uint32_t len);
 
 // Special formated logger helpers
 void logger_log_tcp(char buffer[]);
-void logger_log_mqtt(char buffer[]);
+void logger_log_mqtt(ELogType type, char buffer[]);
 
 // Log messages with a single function call
 void log_message(void * message);

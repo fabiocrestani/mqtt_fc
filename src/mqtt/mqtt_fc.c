@@ -114,7 +114,7 @@ void mqtt_set_subscribe_topics(Mqtt *mqtt,
 
 		sprintf(temp, "Topic \"%s\" was added to list of subscribed topics", 
 			mqtt->subscribe_topics[i]);
-		logger_log_mqtt(temp);
+		logger_log_mqtt(TYPE_INFO, temp);
 	}
 
 	if (mqtt->subscribe_topics_number != num_topics)
@@ -122,7 +122,7 @@ void mqtt_set_subscribe_topics(Mqtt *mqtt,
 		sprintf(temp, 
 			"WARNING: Not all topics could be added to the list (%d added)", 
 			mqtt->subscribe_topics_number);
-		logger_log_mqtt(temp);
+		logger_log_mqtt(TYPE_INFO, temp);
 	}
 }
 
