@@ -23,9 +23,7 @@
 #include "logger.h"
 #include "utils.h"
 
-PublishMessage mqtt_publish_handler_build_message(/*data*/);
-uint8_t mqtt_publish_handler_add_message_to_queue(Mqtt *mqtt, 
-	PublishMessage *message);
-uint8_t mqtt_add_publish_message_to_queue(PublishMessage message);
+uint8_t mqtt_publish_handler_add_data_to_queue(char * topic, uint32_t len,
+	uint8_t * data);
 
 #endif // __MQTT_FC_PUBLISH_HANDLER_H__

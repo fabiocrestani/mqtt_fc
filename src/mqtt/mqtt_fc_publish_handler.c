@@ -21,9 +21,14 @@
 #include "logger.h"
 #include "utils.h"
 
-PublishMessage mqtt_publish_handler_build_message(/*data*/)
+PublishMessage mqtt_publish_handler_build_message(char * topic, uint32_t len,
+	uint8_t * data)
 {
 	PublishMessage m;
+
+	(void) topic;
+	(void) len;
+	(void) data;
 
 	return m;
 }
@@ -41,10 +46,14 @@ uint8_t mqtt_publish_handler_add_message_to_queue(Mqtt *mqtt,
 	return FALSE;
 }
 
-uint8_t mqtt_add_publish_message_to_queue(PublishMessage message)
+uint8_t mqtt_publish_handler_add_data_to_queue(char * topic, uint32_t len,
+	uint8_t * data)
 {
-	printf("calling mqtt_add_publish_message_to_queue with new Message\n");
-	(void) message;
+	PublishMessage message;
+	message = mqtt_publish_handler_build_message(topic, len, data);
+	
+	printf("calling mqtt_add_publish_message_to_queue with: %s %d %s\n",
+		topic, len, data);
 	return FALSE;
 }
 

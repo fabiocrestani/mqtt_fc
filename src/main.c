@@ -66,7 +66,7 @@ int main(int argc, char *argv[])
 	// Dummy sensor init
 	timer_init(&timer_sensor_dummy, TIMER_PERIOD_1_S * 5, 1);
 	timer_start(&timer_sensor_dummy);
-	dummy_sensor_set_mqtt_callback(mqtt_add_publish_message_to_queue);
+	dummy_sensor_set_mqtt_callback(mqtt_publish_handler_add_data_to_queue);
 
 	while (1)
 	{
@@ -82,10 +82,6 @@ int main(int argc, char *argv[])
 		usleep(1000*1000);
 	}
 
-
-
-
     return 0;
-
 }
 
