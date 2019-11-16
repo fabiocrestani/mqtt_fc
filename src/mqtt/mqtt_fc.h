@@ -15,6 +15,9 @@
 #include "mqtt_fc_fsm.h"
 #include "mqtt_fc_qos.h"
 
+#include "circular_buffer.h"
+//#include "circular_message_buffer.h"
+
 extern Timer timer_mqtt_fsm;
 
 #define TRUE (1)
@@ -47,6 +50,9 @@ extern Timer timer_mqtt_fsm;
 #define MQTT_MAX_PING_TIMEOUT (20)
 #define MQTT_PING_RESPONSE_MAX_RETRIES (5)
 #define MQTT_SUBSCRIBE_RESPONSE_MAX_RETRIES (5)
+
+// Fowarding declaration of CircularMessageBuffer to solve cross-include issues
+typedef struct _circularMessageBuffer CircularMessageBuffer;
 
 ///////////////////////////////////////////////////////////////////////////////
 // ENUMS
@@ -290,7 +296,7 @@ typedef struct DisconnectMessage_ {
 typedef struct Mqtt_ {
 	// Buffers
 	CircularBuffer *circular_buffer_rx;
-	PublishMessage publish_message_queue[MQTT_OUTPUT_PUBLISH_QUEUE_SIZE];
+	CircularMessageBuffer *circular_message_buffer_tx;
 
 	// Server address and port
 	char server_address[512];
@@ -319,9 +325,6 @@ typedef struct Mqtt_ {
 	// Received Publish messages
 	PublishMessage received_publish_message_queue[MQTT_RECEIVED_PUBLISH_QUEUE_SIZE];
 	uint32_t received_publish_counter;
-
-	// Sending Publish messages
-	uint32_t publish_message_queue_index;
 
 } Mqtt;
 

@@ -28,13 +28,13 @@ uint8_t mqtt_publish_handler_add_message_to_queue(Mqtt *mqtt,
 	PublishMessage *message)
 {
 	// TODO replace this queue with a buffer
-	if ((mqtt->publish_message_queue_index + 1) > 
+	/*if ((mqtt->publish_message_queue_index + 1) > 
 			MQTT_OUTPUT_PUBLISH_QUEUE_SIZE)
 	{
 		mqtt->publish_message_queue[mqtt->publish_message_queue_index++] =
 			*message;
 		return TRUE;
-	}
+	}*/
 	return FALSE;
 }
 

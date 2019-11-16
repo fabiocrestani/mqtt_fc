@@ -24,6 +24,7 @@
 #include "tcp.h"
 #include "logger.h"
 #include "utils.h"
+#include "circular_message_buffer.h"
 
 Mqtt lc_mqtt;
 
@@ -61,7 +62,6 @@ void mqtt_init(void)
 	lc_mqtt.subscribe_topics_number = 0;
 	lc_mqtt.subscribe_topics_subscribed = 0;
 	lc_mqtt.received_publish_counter = 0;
-	lc_mqtt.publish_message_queue_index = 0;
 }
 
 void mqtt_start(Mqtt *mqtt)
@@ -82,7 +82,7 @@ void mqtt_restart(Mqtt *mqtt)
 	lc_mqtt.wait_for_topic_subscribe = FALSE;
 	lc_mqtt.subscribe_topics_subscribed = 0;
 	lc_mqtt.received_publish_counter = 0;
-	lc_mqtt.publish_message_queue_index = 0;
+
 	mqtt_fsm_set_state(mqtt, E_MQTT_STATE_TCP_CONNECT);
 }
 

@@ -21,6 +21,7 @@
 #include "logger.h"
 #include "utils.h"
 #include "date.h"
+#include "circular_message_buffer.h"
 
 char * mqtt_fsm_translate_state(EMqttState state);
 
@@ -230,7 +231,10 @@ void mqtt_state_connected(Mqtt *mqtt)
 		// TODO
 		// Check if there is any data in the output buffer
 		// If yes, send the data and reset the ping timeout
-		
+		if (!message_buffer_is_empty(mqtt->circular_message_buffer_tx))
+		{
+			//f (char message_buffer_pop(CircularBuffer *buf);
+		}
 
 		// Sends ping if there is inactivity
 		if ((mqtt->ping_timeout)++ >= MQTT_MAX_PING_TIMEOUT)

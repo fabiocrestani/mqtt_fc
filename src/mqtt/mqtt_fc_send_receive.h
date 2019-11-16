@@ -13,7 +13,8 @@
 
 void mqtt_poll(Mqtt *mqtt);
 void mqtt_set_circular_buffer_rx(Mqtt *mqtt, CircularBuffer *ptr_buffer);
-void mqtt_set_circular_buffer_tx(Mqtt *mqtt, CircularBuffer *ptr_buffer);
+void mqtt_set_circular_message_buffer_tx(Mqtt *mqtt, 
+	CircularMessageBuffer *ptr_buffer);
 
 uint8_t mqtt_send(void * message);
 

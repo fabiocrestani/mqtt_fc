@@ -23,9 +23,11 @@
 #include "logger.h"
 #include "utils.h"
 #include "circular_buffer.h"
+#include "circular_message_buffer.h"
 #include "sensor_dummy.h"
 
 CircularBuffer mqtt_rx_buffer;
+CircularMessageBuffer mqtt_tx_message_buffer;
 
 int main(int argc, char *argv[])
 {
@@ -63,7 +65,10 @@ int main(int argc, char *argv[])
 	tcp_set_socket_non_blocking();
 
 	// Mqtt init
+	buffer_init(&mqtt_rx_buffer);
+	message_buffer_init(&mqtt_tx_message_buffer);
 	mqtt_set_circular_buffer_rx(mqtt, &mqtt_rx_buffer);
+	mqtt_set_circular_message_buffer_tx(mqtt, &mqtt_tx_message_buffer);
 	mqtt_set_subscribe_topics(mqtt, topics_to_subscribe, 3);
 	mqtt_start(mqtt);
 
