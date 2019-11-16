@@ -38,6 +38,9 @@ extern Timer timer_mqtt_fsm;
 #define RECEIVED_PUBLISH_MIN_MESSAGE_SIZE (7)
 #define MQTT_RECEIVED_PUBLISH_QUEUE_SIZE (32)
 
+// Queue for sending Publish messages
+#define MQTT_OUTPUT_PUBLISH_QUEUE_SIZE (64)
+
 // Retries
 #define TCP_CONNECT_MAX_RETRIES (5)
 #define MQTT_MAX_PING_TIMEOUT (20)
@@ -292,7 +295,7 @@ typedef struct DisconnectMessage_ {
 typedef struct Mqtt_ {
 	// Buffers
 	CircularBuffer *circular_buffer_rx;
-	CircularBuffer *circular_buffer_tx;
+	PublishMessage publish_message_queue[MQTT_OUTPUT_PUBLISH_QUEUE_SIZE];
 
 	// Server address and port
 	char server_address[512];
@@ -322,6 +325,9 @@ typedef struct Mqtt_ {
 	PublishMessage received_publish_message_queue[MQTT_RECEIVED_PUBLISH_QUEUE_SIZE];
 	uint32_t received_publish_counter;
 
+	// Sending Publish messages
+	uint32_t publish_message_queue_index;
+
 } Mqtt;
 
 
@@ -346,6 +352,8 @@ uint8_t mqtt_subscribe(char topic_to_subscribe[], uint8_t requested_qos);
 
 // Response for remote Publish messages
 uint8_t	mqtt_send_response_to_publish_message(PublishMessage publish_message);
-uint8_t mqtt_get_last_publish_received_message(Mqtt *mqtt, PublishMessage *message);
+uint8_t mqtt_get_last_publish_received_message(Mqtt *mqtt, 
+	PublishMessage *message);
+
 
 #endif // __MQTT_H__

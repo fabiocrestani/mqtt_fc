@@ -26,10 +26,11 @@ void mqtt_set_circular_buffer_rx(Mqtt *mqtt, CircularBuffer *ptr_buffer)
 	mqtt->circular_buffer_rx = ptr_buffer;
 }
 
-void mqtt_set_circular_buffer_tx(Mqtt *mqtt, CircularBuffer *ptr_buffer)
+// TODO remove
+/*void mqtt_set_circular_buffer_tx(Mqtt *mqtt, CircularBuffer *ptr_buffer)
 {
 	mqtt->circular_buffer_tx = ptr_buffer;
-}
+}*/
 
 uint8_t mqtt_send(void * message)
 {

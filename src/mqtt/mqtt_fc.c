@@ -212,7 +212,8 @@ uint8_t	mqtt_send_response_to_publish_message(PublishMessage publish_message)
 }
 
 // Returns the last PUBLISH received message
-uint8_t mqtt_get_last_publish_received_message(Mqtt *mqtt, PublishMessage *message)
+uint8_t mqtt_get_last_publish_received_message(Mqtt *mqtt, 
+	PublishMessage *message)
 {
 	if (mqtt->received_publish_counter > 0)
 	{
@@ -223,4 +224,3 @@ uint8_t mqtt_get_last_publish_received_message(Mqtt *mqtt, PublishMessage *messa
 	}
 	return FALSE;
 }
-

@@ -18,7 +18,17 @@
 #include "utils.h"
 #include "circular_buffer.h"
 
-Timer timer_sensor_dummy;;
+// TODO Remove
+#include "mqtt/mqtt_fc.h"
+
+Timer timer_sensor_dummy;
+
+uint8_t (*mqtt_add_publish_message_to_queue_ptr)(PublishMessage);
+
+void dummy_sensor_set_mqtt_callback(uint8_t (*mqtt_callback_ptr)(PublishMessage))
+{
+	mqtt_add_publish_message_to_queue_ptr = mqtt_callback_ptr;
+}
 
 void dummy_sensor_poll(void)
 {
@@ -39,6 +49,13 @@ void dummy_sensor_poll(void)
 	temperature = (22 - pow((float) tm->tm_hour - 12, 2.0)*0.1) + noise;
 	
 	char temp[512];
-	sprintf(temp, "[sensor_dummy] Temperature is %0.3f °C", temperature);
-	//logger_log(temp);
+	sprintf(temp, "Temperature is %0.3f °C", temperature);
+	logger_log2("sensor_dummy", temp, COLOR_MAGENTA);
+
+	if (mqtt_add_publish_message_to_queue_ptr)
+	{
+		PublishMessage message;
+		mqtt_add_publish_message_to_queue_ptr(message);
+	}
+
 }

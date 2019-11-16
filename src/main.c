@@ -17,6 +17,7 @@
 #include "mqtt_fc.h"
 #include "mqtt_fc_send_receive.h"
 #include "mqtt_fc_tcp_connect.h"
+#include "mqtt_fc_publish_handler.h"
 #include "tcp.h"
 #include "timer.h"
 #include "logger.h"
@@ -25,7 +26,6 @@
 #include "sensor_dummy.h"
 
 CircularBuffer mqtt_rx_buffer;
-CircularBuffer mqtt_tx_buffer;
 
 int main(int argc, char *argv[])
 {
@@ -60,14 +60,14 @@ int main(int argc, char *argv[])
 	tcp_set_socket_non_blocking();
 
 	mqtt_set_circular_buffer_rx(mqtt, &mqtt_rx_buffer);
-	mqtt_set_circular_buffer_tx(mqtt, &mqtt_tx_buffer);
 	mqtt_set_subscribe_topics(mqtt, topics_to_subscribe, 3);
 	mqtt_start(mqtt);
 
+	// Dummy sensor init
 	timer_init(&timer_sensor_dummy, TIMER_PERIOD_1_S * 5, 1);
 	timer_start(&timer_sensor_dummy);
+	dummy_sensor_set_mqtt_callback(mqtt_add_publish_message_to_queue);
 
-	printf("\n");
 	while (1)
 	{
 		// Polls TCP for input/output of data
