@@ -18,16 +18,24 @@
 #include "utils.h"
 #include "circular_buffer.h"
 
+#include "mqtt_fc_qos.h"
+
 Timer timer_sensor_dummy;
+Mqtt *mqtt_ref;
 
 // Callback to call mqtt and send data when data is ready
-uint8_t (*mqtt_add_data_ptr)(char*, uint32_t, uint8_t*);
+uint8_t (*mqtt_add_data_ptr)(Mqtt *, char *, uint32_t, char *, EQosLevel);
 
 void dummy_sensor_set_mqtt_callback(
-	uint8_t (*mqtt_callback_ptr)(char*, uint32_t, uint8_t*)
+	uint8_t (*mqtt_callback_ptr)(Mqtt *, char *, uint32_t, char *, EQosLevel)
 )
 {
 	mqtt_add_data_ptr = mqtt_callback_ptr;
+}
+
+void dummy_sensor_set_mqtt_reference(Mqtt *new_mqtt_ref)
+{
+	mqtt_ref = new_mqtt_ref;
 }
 
 void dummy_sensor_poll(void)
@@ -57,7 +65,7 @@ void dummy_sensor_poll(void)
 	{
 		char data[512];
 		sprintf(data, "%0.3f", temperature);
-		mqtt_add_data_ptr("topic_1", strlen(data), (uint8_t *) data);
+		mqtt_add_data_ptr(mqtt_ref, "topic_1", strlen(data), data, E_QOS_NONE);
 	}
 
 }

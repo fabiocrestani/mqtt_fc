@@ -19,8 +19,9 @@
 
 extern Timer timer_sensor_dummy;
 
+void dummy_sensor_set_mqtt_reference(Mqtt *new_mqtt_ref);
 void dummy_sensor_set_mqtt_callback(
-	uint8_t (*mqtt_callback_ptr)(char*, uint32_t, uint8_t*));
+	uint8_t (*mqtt_callback_ptr)(Mqtt *, char *, uint32_t, char *, EQosLevel));
 
 void dummy_sensor_poll(void);
 

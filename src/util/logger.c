@@ -12,6 +12,7 @@
 #include <sys/time.h>
 
 #include "mqtt_fc.h"
+#include "mqtt_fc_pack.h"
 #include "logger.h"
 #include "utils.h"
 

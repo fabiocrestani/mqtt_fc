@@ -23,7 +23,7 @@
 #include "logger.h"
 #include "utils.h"
 
-uint8_t mqtt_publish_handler_add_data_to_queue(char * topic, uint32_t len,
-	uint8_t * data);
+uint8_t mqtt_publish_handler_add_data_to_queue(Mqtt * mqtt, char * topic, 
+	uint32_t len, char * data, EQosLevel qos);
 
 #endif // __MQTT_FC_PUBLISH_HANDLER_H__

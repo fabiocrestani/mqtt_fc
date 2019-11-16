@@ -17,25 +17,17 @@
 #include "mqtt_fc_build.h"
 #include "mqtt_fc_fsm.h"
 #include "mqtt_fc_tcp_connect.h"
+#include "mqtt_fc_qos.h"
 #include "tcp.h"
 #include "logger.h"
 #include "utils.h"
 
-PublishMessage mqtt_publish_handler_build_message(char * topic, uint32_t len,
-	uint8_t * data)
-{
-	PublishMessage m;
-
-	(void) topic;
-	(void) len;
-	(void) data;
-
-	return m;
-}
+static uint32_t id = 0;
 
 uint8_t mqtt_publish_handler_add_message_to_queue(Mqtt *mqtt, 
 	PublishMessage *message)
 {
+	// TODO replace this queue with a buffer
 	if ((mqtt->publish_message_queue_index + 1) > 
 			MQTT_OUTPUT_PUBLISH_QUEUE_SIZE)
 	{
@@ -46,14 +38,32 @@ uint8_t mqtt_publish_handler_add_message_to_queue(Mqtt *mqtt,
 	return FALSE;
 }
 
-uint8_t mqtt_publish_handler_add_data_to_queue(char * topic, uint32_t len,
-	uint8_t * data)
+uint8_t mqtt_publish_handler_add_data_to_queue(Mqtt *mqtt, char * topic, 
+	uint32_t len, char * data, EQosLevel qos)
 {
 	PublishMessage message;
-	message = mqtt_publish_handler_build_message(topic, len, data);
+
+	if (!topic)
+	{
+		return FALSE;
+	}
+
+	message = mqtt_build_publish_message(topic, id, data, len, qos);
+
+	if (qos > 0)
+	{
+		id++;
+	}
 	
-	printf("calling mqtt_add_publish_message_to_queue with: %s %d %s\n",
-		topic, len, data);
-	return FALSE;
+	char temp[512];
+	sprintf(temp, "Packing Publish with id: %d topic: %s Qos: %s", 
+		id, topic, translate_qos_level(qos));
+	logger_log_mqtt(TYPE_INFO, temp);
+
+	mqtt_publish_handler_add_message_to_queue(mqtt, &message);
+
+	return TRUE;
 }
+
+
 

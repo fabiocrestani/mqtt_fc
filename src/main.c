@@ -43,6 +43,7 @@ int main(int argc, char *argv[])
 	mqtt_init();
 	Mqtt *mqtt = mqtt_get_instance();
 	
+	// Command line arguments parsing
 	if (argc > 1)
 	{
 		mqtt_tcp_connect_set_server_address(mqtt, argv[1]);
@@ -53,12 +54,15 @@ int main(int argc, char *argv[])
 		mqtt_tcp_connect_set_server_port(mqtt, atoi(argv[2]));
 	}
 
+	// Timer init
 	timer_init(&timer_mqtt_fsm, TIMER_PERIOD_1_MS * 500, 1);
 	timer_start(&timer_mqtt_fsm);
 
+	// TCP init
 	tcp_set_circular_buffer(&mqtt_rx_buffer);
 	tcp_set_socket_non_blocking();
 
+	// Mqtt init
 	mqtt_set_circular_buffer_rx(mqtt, &mqtt_rx_buffer);
 	mqtt_set_subscribe_topics(mqtt, topics_to_subscribe, 3);
 	mqtt_start(mqtt);
@@ -66,6 +70,7 @@ int main(int argc, char *argv[])
 	// Dummy sensor init
 	timer_init(&timer_sensor_dummy, TIMER_PERIOD_1_S * 5, 1);
 	timer_start(&timer_sensor_dummy);
+	dummy_sensor_set_mqtt_reference(mqtt);
 	dummy_sensor_set_mqtt_callback(mqtt_publish_handler_add_data_to_queue);
 
 	while (1)

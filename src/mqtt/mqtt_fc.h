@@ -13,6 +13,7 @@
 
 #include "timer.h"
 #include "mqtt_fc_fsm.h"
+#include "mqtt_fc_qos.h"
 
 extern Timer timer_mqtt_fsm;
 
@@ -67,12 +68,6 @@ typedef enum EMessageType_ {
 	DISCONNECT = 0xE,
 	MESSAGE_TYPE_COUNT
 } EMessageType;
-
-typedef enum EQosLevel_ {
-	E_QOS_NONE = 0,
-	E_QOS_PUBACK = 1,
-	E_QOS_PUBREC = 2
-} EQosLevel;
 
 typedef enum EConnakReturnCode_ {
 	E_CONNACK_CONNECTION_ACCEPTED = 0x0,
