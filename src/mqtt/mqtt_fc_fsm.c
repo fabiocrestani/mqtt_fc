@@ -197,6 +197,8 @@ void mqtt_state_connect(Mqtt *mqtt)
 ///////////////////////////////////////////////////////////////////////////
 void mqtt_state_connected(Mqtt *mqtt)
 {
+	char temp[512];
+
 	if (mqtt->substate == E_MQTT_SUBSTATE_SEND)
 	{
 		// When first connected, subscribe to desired topics
@@ -216,7 +218,6 @@ void mqtt_state_connected(Mqtt *mqtt)
 		// If yes, process the data and reset the ping timeout
 		if (mqtt->received_publish_counter > 0)
 		{
-			char temp[512];
 			PublishMessage message;
 			if (mqtt_get_last_publish_received_message(mqtt, &message))
 			{
@@ -228,12 +229,27 @@ void mqtt_state_connected(Mqtt *mqtt)
 			}
 		}
 
-		// TODO
 		// Check if there is any data in the output buffer
 		// If yes, send the data and reset the ping timeout
 		if (!message_buffer_is_empty(mqtt->circular_message_buffer_tx))
 		{
-			//f (char message_buffer_pop(CircularBuffer *buf);
+			PublishMessage message = 
+				message_buffer_pop(mqtt->circular_message_buffer_tx);
+			uint8_t ret = mqtt_send((void *) &message);
+
+			if (ret)
+			{
+				sprintf(temp, "Sending Publish message to topic %s", 
+					message.topic_name);
+				logger_log_mqtt(TYPE_OUTPUT, temp);
+				mqtt->ping_timeout = 0;
+			}
+			else
+			{
+				sprintf(temp, "Error sending Publish message to topic %s", 
+					message.topic_name);
+				logger_log_mqtt(TYPE_ERROR, temp);
+			}
 		}
 
 		// Sends ping if there is inactivity

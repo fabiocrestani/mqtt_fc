@@ -65,7 +65,8 @@ void dummy_sensor_poll(void)
 	{
 		char data[512];
 		sprintf(data, "%0.3f", temperature);
-		mqtt_add_data_ptr(mqtt_ref, "topic_1", strlen(data), data, E_QOS_NONE);
+		mqtt_add_data_ptr(mqtt_ref, "topic_temperature_sensor", strlen(data), 
+			data, E_QOS_NONE);
 	}
 
 }

@@ -7,8 +7,6 @@
 
 #include "circular_message_buffer.h"
 
-// TODO make this buffer generic
-
 void message_buffer_init(CircularMessageBuffer *buf)
 {
     buf->numEl = 0;
@@ -23,7 +21,9 @@ void message_buffer_put(CircularMessageBuffer *buf, PublishMessage newEl)
 		buf->data[buf->idxProd++] = newEl;
 		buf->numEl++;
 		if (buf->idxProd >= MESSAGE_BUFFER_SIZE)
+		{
 			buf->idxProd = 0;
+		}
 	}
 }
 
@@ -57,7 +57,4 @@ uint8_t message_buffer_has_room_for(CircularMessageBuffer *buf, uint32_t len)
 {
 	return ((buf->numEl + len) < MESSAGE_BUFFER_SIZE);
 }
-
-
-
 

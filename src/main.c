@@ -73,7 +73,7 @@ int main(int argc, char *argv[])
 	mqtt_start(mqtt);
 
 	// Dummy sensor init
-	timer_init(&timer_sensor_dummy, TIMER_PERIOD_1_S * 5, 1);
+	timer_init(&timer_sensor_dummy, TIMER_PERIOD_1_S * 2, 1);
 	timer_start(&timer_sensor_dummy);
 	dummy_sensor_set_mqtt_reference(mqtt);
 	dummy_sensor_set_mqtt_callback(mqtt_publish_handler_add_data_to_queue);

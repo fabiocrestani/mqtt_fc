@@ -109,6 +109,8 @@ PublishMessage mqtt_build_publish_message(char topic_name[], uint16_t id,
 	{
 		m.topic_name[i] = topic_name[i];
 	}
+	
+	m.topic_name[topic_name_len] = 0;
 
 	m.message_id = id;
 

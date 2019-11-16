@@ -21,21 +21,29 @@
 #include "tcp.h"
 #include "logger.h"
 #include "utils.h"
+#include "circular_message_buffer.h"
 
 static uint32_t id = 0;
 
 uint8_t mqtt_publish_handler_add_message_to_queue(Mqtt *mqtt, 
 	PublishMessage *message)
 {
-	// TODO replace this queue with a buffer
-	/*if ((mqtt->publish_message_queue_index + 1) > 
-			MQTT_OUTPUT_PUBLISH_QUEUE_SIZE)
+	char temp[512];
+
+	if (message_buffer_has_room_for(mqtt->circular_message_buffer_tx, 1))
 	{
-		mqtt->publish_message_queue[mqtt->publish_message_queue_index++] =
-			*message;
+		message_buffer_put(mqtt->circular_message_buffer_tx, *message);
+
+		sprintf(temp, "Queueing Publish with topic: %s", message->topic_name);
+		logger_log_mqtt(TYPE_INFO, temp);
 		return TRUE;
-	}*/
-	return FALSE;
+	}
+	else
+	{
+		logger_log_mqtt(TYPE_ERROR,
+			"Error queueing Publish message. Buffer is full!");
+		return FALSE;
+	}
 }
 
 uint8_t mqtt_publish_handler_add_data_to_queue(Mqtt *mqtt, char * topic, 
@@ -55,11 +63,6 @@ uint8_t mqtt_publish_handler_add_data_to_queue(Mqtt *mqtt, char * topic,
 		id++;
 	}
 	
-	char temp[512];
-	sprintf(temp, "Packing Publish with id: %d topic: %s Qos: %s", 
-		id, topic, translate_qos_level(qos));
-	logger_log_mqtt(TYPE_INFO, temp);
-
 	mqtt_publish_handler_add_message_to_queue(mqtt, &message);
 
 	return TRUE;
