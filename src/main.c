@@ -39,7 +39,7 @@ int main(int argc, char *argv[])
 *                                                                   *\n\
 * MQTT FC                                                           *\n\
 * Author: Fabio Crestani                                            *\n\
-* Version: 0.1                                                      *\n\
+* Version: 1.0                                                      *\n\
 *                                                                   *\n\
 *********************************************************************\n\n");
 	mqtt_init();
