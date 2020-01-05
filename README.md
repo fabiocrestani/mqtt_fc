@@ -2,6 +2,13 @@
 
 I have implemented a MQTT client for no specific reason. It was developed in a Linux environment but could be easily ported to a microcontroller. The code has less than 3000 lines of code and currently does not implement 100% of the protocol
 
+## Compilation
+~~~bash
+./configure
+cd src
+make
+~~~
+
 ## Usage
 
 ~~~bash
