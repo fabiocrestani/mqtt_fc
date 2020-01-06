@@ -2,20 +2,22 @@
 
 I have implemented a MQTT client for no specific reason. It was developed in a Linux environment but could be easily ported to a microcontroller. The code has less than 3000 lines of code and currently does not implement 100% of the protocol
 
-## Compilation
+## Compilation of examples
 ~~~bash
 ./configure
-cd src
+cd examples/[desired example]
 make
 ~~~
 
-## Usage
+## Producer
+
+### Usage
 
 ~~~bash
-build/mqtt_fc [mqtt broker address] [mqtt broker tcp port number]
+build/mqtt_fc_producer [mqtt broker address] [mqtt broker tcp port number]
 ~~~
 
-## Attaching a data producer
+### Attaching a data producer
 
 Follow the example of the *dummy sensor* in main.c and set two references to the data producer: a reference to *mqtt and a reference to a function (callback to be called when the producer needs to send data to the mqtt output queue):
 
