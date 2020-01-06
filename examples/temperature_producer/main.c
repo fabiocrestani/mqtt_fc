@@ -1,5 +1,6 @@
 /*
  * main.c
+ * mqtt_fc Producer example
  * Author: Fabio Crestani
  */
 
@@ -18,6 +19,7 @@
 #include "mqtt_fc_send_receive.h"
 #include "mqtt_fc_tcp_connect.h"
 #include "mqtt_fc_publish_handler.h"
+#include "mqtt_fc_topics_loader.h"
 #include "tcp.h"
 #include "timer.h"
 #include "logger.h"
@@ -31,13 +33,13 @@ CircularMessageBuffer mqtt_tx_message_buffer;
 
 int main(int argc, char *argv[])
 {
-	char topics_to_subscribe[3][MQTT_TOPIC_NAME_MAX_LEN] = 
-		{{"topic_1"}, {"topic_2"}, {"topic_3"}};
+	char topics_to_subscribe[MQTT_SUBSCRIBE_TOPIC_NUM_MAX][MQTT_TOPIC_NAME_MAX_LEN];
+	uint32_t num_topics_to_subscribe = 0;
 
 	printf("\n\
 *********************************************************************\n\
 *                                                                   *\n\
-* MQTT FC                                                           *\n\
+* MQTT FC - Producer example                                        *\n\
 * Author: Fabio Crestani                                            *\n\
 * Version: 1.0                                                      *\n\
 *                                                                   *\n\
@@ -69,7 +71,12 @@ int main(int argc, char *argv[])
 	message_buffer_init(&mqtt_tx_message_buffer);
 	mqtt_set_circular_buffer_rx(mqtt, &mqtt_rx_buffer);
 	mqtt_set_circular_message_buffer_tx(mqtt, &mqtt_tx_message_buffer);
-	mqtt_set_subscribe_topics(mqtt, topics_to_subscribe, 3);
+	if (mqtt_fc_load_topic_from_file("topics_to_subscribe.txt", 
+		topics_to_subscribe, &num_topics_to_subscribe))
+	{
+		mqtt_set_subscribe_topics(mqtt, topics_to_subscribe, 
+			num_topics_to_subscribe);
+	}
 	mqtt_start(mqtt);
 
 	// Dummy sensor init
