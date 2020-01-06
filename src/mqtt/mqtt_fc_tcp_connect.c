@@ -35,7 +35,7 @@ void mqtt_tcp_connect_set_server_port(Mqtt *mqtt, uint32_t port)
 
 uint8_t mqtt_tcp_server_connect(Mqtt *mqtt)
 {
-	char temp[256];
+	char temp[1024];
 
 	logger_log_tcp("Connecting to TCP server...");
 
@@ -46,8 +46,8 @@ uint8_t mqtt_tcp_server_connect(Mqtt *mqtt)
 
 	tcp_set_socket_non_blocking();
 
-	sprintf(temp, "Connected to %s:%u", mqtt->server_address,
-												 mqtt->server_port);
+	sprintf(temp, "Connected to %s:%u", mqtt->server_address, 
+		mqtt->server_port);
 	logger_log_tcp(temp);
 	return TRUE;
 }
