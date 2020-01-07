@@ -102,6 +102,13 @@ void mqtt_set_key_value_configuration(char * key, char * value)
 {
 	char temp[2048];
 
+	if ((key == 0) || (value == 0) || (key[0] == '#') || (key[0] == ' ') 
+		|| (key[0] == '\n') || (value[0] == '#') || (value[0] == ' ') 
+		|| (value[0] == '\n'))
+	{
+		return;
+	}
+
 	if (equals(key, "mqtt_default_server"))
 	{
 		strcpy(lc_mqtt.server_address, value);

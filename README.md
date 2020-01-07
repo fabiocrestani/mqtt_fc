@@ -34,6 +34,14 @@ mqtt_add_data_ptr(mqtt_ref, "topic_temperature_sensor", strlen(data), data, E_QO
 
 For EQosLevel struct, include *mqtt_fc_qos.h*
 
+## Configuration file
+The file *mqtt_fc.cfg* can be used for easier configuration of the app.
+The available tags are:
+
+* MQTT Broker server address `mqtt_default_server=mqtt.eclipse.org`
+* MQTT Broker server port `mqtt_default_port=1883`
+* MQTT Timer period in miliseconds `mqtt_fsm_timer_period_ms=1000`
+
 ## Implementation details
 
 ![State Machine Diagram](https://github.com/fabiocrestani/mqtt_fc/blob/master/docs/mqtt_fsm.png)
