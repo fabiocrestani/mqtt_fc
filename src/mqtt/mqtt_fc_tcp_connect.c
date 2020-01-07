@@ -37,7 +37,7 @@ uint8_t mqtt_tcp_server_connect(Mqtt *mqtt)
 {
 	char temp[1024];
 
-	logger_log_tcp("Connecting to TCP server...");
+	logger_log_tcp(TYPE_INFO, "Connecting to TCP server...");
 
 	if (!tcp_connect(mqtt->server_address, mqtt->server_port))
 	{
@@ -48,7 +48,7 @@ uint8_t mqtt_tcp_server_connect(Mqtt *mqtt)
 
 	sprintf(temp, "Connected to %s:%u", mqtt->server_address, 
 		mqtt->server_port);
-	logger_log_tcp(temp);
+	logger_log_tcp(TYPE_OK, temp);
 	return TRUE;
 }
 

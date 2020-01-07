@@ -42,11 +42,11 @@ void mqtt_fsm_set_state(Mqtt *mqtt, EMqttState new_state)
 void mqtt_fsm_set_error_state(Mqtt *mqtt, EMqttState origin)
 {
 	char temp[512];
-	sprintf(temp , "FATAL ERROR! Error in MQTT state %s (%d)", 
+	sprintf(temp, "FATAL ERROR! Error in MQTT state %s (%d)", 
 		mqtt_fsm_translate_state(origin), origin);
-	logger_log(temp);
+	logger_log_mqtt(TYPE_ERROR, temp);
 
-	logger_log("Reseting application in 10 seconds");
+	logger_log_mqtt(TYPE_INFO, "Reseting application in 10 seconds");
 	sleep(10);
 	mqtt_restart(mqtt);
 }
@@ -143,12 +143,12 @@ void mqtt_state_tcp_connect(Mqtt *mqtt)
 		{
 			(mqtt->retries)++;
 			char temp[512];
-			sprintf(temp, "[tcp] Connection error. Retry %d/%d",
+			sprintf(temp, "TCP connection error. Retry %d/%d",
 				mqtt->retries, TCP_CONNECT_MAX_RETRIES);		
-			logger_log(temp);
+			logger_log_mqtt(TYPE_ERROR, temp);
 			if (mqtt->retries >= TCP_CONNECT_MAX_RETRIES)
 			{
-				logger_log("[tcp] Max retries exceeded.");
+				logger_log_mqtt(TYPE_ERROR, "Max TCP connection retries exceeded.");
 				mqtt_fsm_set_error_state(mqtt, E_MQTT_STATE_TCP_CONNECT);
 			}
 		}

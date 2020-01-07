@@ -29,7 +29,7 @@ typedef enum EConnakReturnCode_ EConnakReturnCode;
 
 #define LOG_PUBLISH_PAYLOAD (FALSE)
 
-#define LOG_CONFIGURATION_FILE_PARSER (TRUE)
+#define LOG_CONFIGURATION_FILE_PARSER (FALSE)
 
 #define LOG_DUMP (TRUE)
 #define LOG_DUMP_CONNECT (FALSE)
@@ -65,7 +65,8 @@ typedef enum ELogType_ {
 	TYPE_OUTPUT,
 	TYPE_INPUT,
 	TYPE_INFO,
-	TYPE_ERROR
+	TYPE_ERROR,
+	TYPE_OK
 } ELogType;
 
 // Log
@@ -75,7 +76,7 @@ void logger_err(char buffer[]);
 void dump(char *data, uint32_t len);
 
 // Special formated logger helpers
-void logger_log_tcp(char buffer[]);
+void logger_log_tcp(ELogType type, char buffer[]);
 void logger_log_mqtt(ELogType type, char buffer[]);
 
 // Log messages with a single function call

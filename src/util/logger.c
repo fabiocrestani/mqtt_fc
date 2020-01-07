@@ -180,13 +180,14 @@ char * get_type_string(ELogType type)
 		case TYPE_OUTPUT: return "\033[1;34m>\033[0m";
 		case TYPE_INPUT: return "\033[1;32m<\033[0m";
 		case TYPE_ERROR: return "\033[1;31mx\033[0m";
-		case TYPE_INFO: default: return "\033[1;33m.\033[0m";
+		case TYPE_OK: return "\033[1;32m.\033[0m";
+		case TYPE_INFO: default: return "\033[1;33m!\033[0m";
 	}
 }
 
-void logger_log_tcp(char buffer[])
+void logger_log_tcp(ELogType type, char buffer[])
 {
-	logger_log2("tcp", buffer, COLOR_BLUE);
+	logger_log3("tcp", buffer, COLOR_BLUE, type);
 }
 
 void logger_log_mqtt(ELogType type, char buffer[])

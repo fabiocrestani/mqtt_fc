@@ -100,8 +100,6 @@ uint32_t mqtt_get_timer_period_ms(void)
 
 void mqtt_set_key_value_configuration(char * key, char * value)
 {
-	char temp[2048];
-
 	if ((key == 0) || (value == 0) || (key[0] == '#') || (key[0] == ' ') 
 		|| (key[0] == '\n') || (value[0] == '#') || (value[0] == ' ') 
 		|| (value[0] == '\n'))
@@ -126,6 +124,7 @@ void mqtt_set_key_value_configuration(char * key, char * value)
 	else
 	{
 		#if LOG_CONFIGURATION_FILE_PARSER == TRUE
+			char temp[2048];
 			sprintf(temp, "Error while parsing configuration file. \
 Invalid key/value pair: %s=%s", key, value);
 			logger_log_mqtt(TYPE_ERROR, temp);
@@ -134,8 +133,9 @@ Invalid key/value pair: %s=%s", key, value);
 	}
 
 	#if LOG_CONFIGURATION_FILE_PARSER == TRUE
+		char temp[2048];
 		sprintf(temp, "Adding configuration entry: %s=%s", key, value);
-		logger_log_mqtt(TYPE_INFO, temp);
+		logger_log_mqtt(TYPE_OK, temp);
 	#endif
 }
 
@@ -186,7 +186,7 @@ void mqtt_set_subscribe_topics(Mqtt *mqtt,
 
 		sprintf(temp, "Topic \"%s\" was added to list of subscribed topics", 
 			mqtt->subscribe_topics[i]);
-		logger_log_mqtt(TYPE_INFO, temp);
+		logger_log_mqtt(TYPE_OK, temp);
 	}
 
 	if (mqtt->subscribe_topics_number != num_topics)
