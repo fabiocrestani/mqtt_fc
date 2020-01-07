@@ -145,7 +145,7 @@ void mqtt_state_tcp_connect(Mqtt *mqtt)
 			char temp[512];
 			sprintf(temp, "TCP connection error. Retry %d/%d",
 				mqtt->retries, TCP_CONNECT_MAX_RETRIES);		
-			logger_log_mqtt(TYPE_ERROR, temp);
+			logger_log_mqtt(TYPE_INFO, temp);
 			if (mqtt->retries >= TCP_CONNECT_MAX_RETRIES)
 			{
 				logger_log_mqtt(TYPE_ERROR, "Max TCP connection retries exceeded.");
@@ -186,8 +186,16 @@ void mqtt_state_connect(Mqtt *mqtt)
 		}
 		else
 		{
-			// TODO add retries counter
-			logger_log_mqtt(TYPE_INFO, "Waiting response from connect");
+			(mqtt->retries)++;
+			char temp[512];
+			sprintf(temp, "CONNECT response not received. Retry %d/%d",
+				mqtt->retries, MQTT_CONNECT_MAX_RETRIES);		
+			logger_log_mqtt(TYPE_INFO, temp);
+			if (mqtt->retries >= MQTT_CONNECT_MAX_RETRIES)
+			{
+				logger_log_mqtt(TYPE_ERROR, "Max CONNECT retries exceeded.");
+				mqtt_fsm_set_error_state(mqtt, E_MQTT_STATE_CONNECT);
+			}
 		}
 	}	
 }

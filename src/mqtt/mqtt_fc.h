@@ -50,6 +50,7 @@ extern Timer timer_mqtt_fsm;
 
 // Retries
 #define TCP_CONNECT_MAX_RETRIES (5)
+#define MQTT_CONNECT_MAX_RETRIES (5)
 #define MQTT_MAX_PING_TIMEOUT (20)
 #define MQTT_PING_RESPONSE_MAX_RETRIES (5)
 #define MQTT_SUBSCRIBE_RESPONSE_MAX_RETRIES (5)
