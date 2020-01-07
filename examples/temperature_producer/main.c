@@ -61,7 +61,7 @@ int main(int argc, char *argv[])
 
 	// Timer init
 	timer_init(&timer_mqtt_fsm, 
-		TIMER_PERIOD_1_MS * mqtt_get_timer_period_ms(), 1);
+		TIMER_PERIOD_1_MS * mqtt_get_timer_period_us(), 1);
 	timer_start(&timer_mqtt_fsm);
 
 	// TCP init

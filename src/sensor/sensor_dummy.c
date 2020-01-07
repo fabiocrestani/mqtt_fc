@@ -54,7 +54,7 @@ void dummy_sensor_poll(void)
 	noise = (rand() % 1000);
 	noise = noise / 1000000;
 	noise = noise*tm->tm_min;
-	temperature = (22 - pow((float) tm->tm_hour - 12, 2.0)*0.1) + noise;
+	temperature = (22 - pow((float) tm->tm_hour - 12, 2.0) * 0.1) + noise;
 	
 	char temp[512];
 	sprintf(temp, "Temperature is %0.3f °C", temperature);

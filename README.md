@@ -40,7 +40,7 @@ The available tags are:
 
 * MQTT Broker server address `mqtt_default_server=mqtt.eclipse.org`
 * MQTT Broker server port `mqtt_default_port=1883`
-* MQTT Timer period in miliseconds `mqtt_fsm_timer_period_ms=1000`
+* MQTT Timer period in microseconds `mqtt_fsm_timer_period_us=1000`
 
 ## Implementation details
 

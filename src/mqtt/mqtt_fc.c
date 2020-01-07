@@ -46,7 +46,7 @@ uint16_t mqtt_get_new_message_id(void)
 
 void mqtt_init(void)
 {
-	char default_server_address[256] = "iot.eclipse.org";
+	char default_server_address[256] = "mqtt.eclipse.org";
 	uint32_t default_server_port = 1883;
 
 	lc_mqtt.connected = FALSE;
@@ -63,7 +63,7 @@ void mqtt_init(void)
 	lc_mqtt.subscribe_topics_number = 0;
 	lc_mqtt.subscribe_topics_subscribed = 0;
 	lc_mqtt.received_publish_counter = 0;
-	lc_mqtt.timer_period_ms = MQTT_DEFAULT_TIMER_PERIOD_MS;
+	lc_mqtt.timer_period_us = MQTT_DEFAULT_TIMER_PERIOD_US;
 }
 
 void mqtt_start(Mqtt *mqtt)
@@ -93,9 +93,9 @@ Mqtt * mqtt_get_instance(void)
 	return &lc_mqtt;
 }
 
-uint32_t mqtt_get_timer_period_ms(void)
+uint32_t mqtt_get_timer_period_us(void)
 {
-	return lc_mqtt.timer_period_ms;
+	return lc_mqtt.timer_period_us;
 }
 
 void mqtt_set_key_value_configuration(char * key, char * value)
@@ -115,11 +115,14 @@ void mqtt_set_key_value_configuration(char * key, char * value)
 	{
 		lc_mqtt.server_port = atoi(value);
 	}
-	else if (equals(key, "mqtt_fsm_timer_period_ms"))
+	else if (equals(key, "mqtt_fsm_timer_period_us"))
 	{
 		uint32_t new_value = atoi(value);
-		new_value = LIMITER(new_value, MQTT_MIN_TIMER_PERIOD_MS);
-		lc_mqtt.timer_period_ms = new_value;
+		if (new_value < MQTT_MIN_TIMER_PERIOD_US)
+		{
+			new_value = MQTT_MIN_TIMER_PERIOD_US;
+		}
+		lc_mqtt.timer_period_us = new_value;
 	}
 	else
 	{

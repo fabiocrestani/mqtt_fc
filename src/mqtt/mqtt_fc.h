@@ -20,8 +20,8 @@
 
 // Timer object and timer configuration
 extern Timer timer_mqtt_fsm;
-#define MQTT_DEFAULT_TIMER_PERIOD_MS (500)
-#define MQTT_MIN_TIMER_PERIOD_MS (100)
+#define MQTT_DEFAULT_TIMER_PERIOD_US (500)
+#define MQTT_MIN_TIMER_PERIOD_US (500)
 
 #define TRUE (1)
 #define FALSE (0)
@@ -303,7 +303,7 @@ typedef struct Mqtt_ {
 	CircularMessageBuffer *circular_message_buffer_tx;
 
 	// Mqtt desired timer period
-	uint32_t timer_period_ms;
+	uint32_t timer_period_us;
 
 	// Server address and port
 	char server_address[512];
@@ -345,7 +345,7 @@ void mqtt_init(void);
 void mqtt_start(Mqtt *mqtt);
 void mqtt_restart(Mqtt *mqtt);
 Mqtt * mqtt_get_instance(void);
-uint32_t mqtt_get_timer_period_ms(void);
+uint32_t mqtt_get_timer_period_us(void);
 uint8_t mqtt_parse_configuration_file(char * filename);
 
 // Protocol
