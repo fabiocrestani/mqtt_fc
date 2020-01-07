@@ -24,6 +24,7 @@
 #include "tcp.h"
 #include "logger.h"
 #include "utils.h"
+#include "string_utils.h"
 #include "circular_message_buffer.h"
 
 Mqtt lc_mqtt;
@@ -62,6 +63,7 @@ void mqtt_init(void)
 	lc_mqtt.subscribe_topics_number = 0;
 	lc_mqtt.subscribe_topics_subscribed = 0;
 	lc_mqtt.received_publish_counter = 0;
+	lc_mqtt.timer_period_ms = MQTT_DEFAULT_TIMER_PERIOD_MS;
 }
 
 void mqtt_start(Mqtt *mqtt)
@@ -89,6 +91,69 @@ void mqtt_restart(Mqtt *mqtt)
 Mqtt * mqtt_get_instance(void)
 {
 	return &lc_mqtt;
+}
+
+uint32_t mqtt_get_timer_period_ms(void)
+{
+	return lc_mqtt.timer_period_ms;
+}
+
+void mqtt_set_key_value_configuration(char * key, char * value)
+{
+	char temp[2048];
+
+	if (equals(key, "mqtt_default_server"))
+	{
+		strcpy(lc_mqtt.server_address, value);
+	}
+	else if (equals(key, "mqtt_default_port"))
+	{
+		lc_mqtt.server_port = atoi(value);
+	}
+	else if (equals(key, "mqtt_fsm_timer_period_ms"))
+	{
+		uint32_t new_value = atoi(value);
+		new_value = LIMITER(new_value, MQTT_MIN_TIMER_PERIOD_MS);
+		lc_mqtt.timer_period_ms = new_value;
+	}
+	else
+	{
+		#if LOG_CONFIGURATION_FILE_PARSER == TRUE
+			sprintf(temp, "Error while parsing configuration file. \
+Invalid key/value pair: %s=%s", key, value);
+			logger_log_mqtt(TYPE_ERROR, temp);
+		#endif
+		return;
+	}
+
+	#if LOG_CONFIGURATION_FILE_PARSER == TRUE
+		sprintf(temp, "Adding configuration entry: %s=%s", key, value);
+		logger_log_mqtt(TYPE_INFO, temp);
+	#endif
+}
+
+uint8_t mqtt_parse_configuration_file(char * filename)
+{
+	FILE *f;
+	char line_read[2048];
+	char * token_read;
+
+	f = fopen(filename, "r");
+	if (f == NULL)
+	{
+		logger_log_mqtt(TYPE_ERROR, "Configuration file was not found");
+		return FALSE;
+	}
+
+	while (fscanf(f, "%s\n", line_read) != EOF)
+	{
+		token_read = strtok(line_read, "=");
+		token_read = strtok(NULL, "=");
+		mqtt_set_key_value_configuration(line_read, token_read);
+	}
+
+	fclose(f);
+	return TRUE;
 }
 
 void mqtt_reset_ping_timeout(Mqtt *mqtt)

@@ -45,6 +45,7 @@ int main(int argc, char *argv[])
 *                                                                   *\n\
 *********************************************************************\n\n");
 	mqtt_init();
+	mqtt_parse_configuration_file("../../mqtt_fc.cfg");
 	Mqtt *mqtt = mqtt_get_instance();
 	
 	// Command line arguments parsing
@@ -59,7 +60,8 @@ int main(int argc, char *argv[])
 	}
 
 	// Timer init
-	timer_init(&timer_mqtt_fsm, TIMER_PERIOD_1_MS * 500, 1);
+	timer_init(&timer_mqtt_fsm, 
+		TIMER_PERIOD_1_MS * mqtt_get_timer_period_ms(), 1);
 	timer_start(&timer_mqtt_fsm);
 
 	// TCP init
@@ -71,7 +73,7 @@ int main(int argc, char *argv[])
 	message_buffer_init(&mqtt_tx_message_buffer);
 	mqtt_set_circular_buffer_rx(mqtt, &mqtt_rx_buffer);
 	mqtt_set_circular_message_buffer_tx(mqtt, &mqtt_tx_message_buffer);
-	if (mqtt_fc_load_topic_from_file("topics_to_subscribe.txt", 
+	if (mqtt_fc_load_topic_from_file("../../topics_to_subscribe.txt", 
 		topics_to_subscribe, &num_topics_to_subscribe))
 	{
 		mqtt_set_subscribe_topics(mqtt, topics_to_subscribe, 

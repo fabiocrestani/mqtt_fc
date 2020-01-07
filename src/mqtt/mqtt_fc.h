@@ -18,7 +18,10 @@
 #include "circular_buffer.h"
 //#include "circular_message_buffer.h"
 
+// Timer object and timer configuration
 extern Timer timer_mqtt_fsm;
+#define MQTT_DEFAULT_TIMER_PERIOD_MS (500)
+#define MQTT_MIN_TIMER_PERIOD_MS (100)
 
 #define TRUE (1)
 #define FALSE (0)
@@ -298,6 +301,9 @@ typedef struct Mqtt_ {
 	CircularBuffer *circular_buffer_rx;
 	CircularMessageBuffer *circular_message_buffer_tx;
 
+	// Mqtt desired timer period
+	uint32_t timer_period_ms;
+
 	// Server address and port
 	char server_address[512];
 	uint32_t server_port;
@@ -332,11 +338,16 @@ typedef struct Mqtt_ {
 ///////////////////////////////////////////////////////////////////////////////
 // FUNCTIONS
 ///////////////////////////////////////////////////////////////////////////////
+// Internals
 void error(char *msg);
 void mqtt_init(void);
 void mqtt_start(Mqtt *mqtt);
 void mqtt_restart(Mqtt *mqtt);
 Mqtt * mqtt_get_instance(void);
+uint32_t mqtt_get_timer_period_ms(void);
+uint8_t mqtt_parse_configuration_file(char * filename);
+
+// Protocol
 void mqtt_reset_ping_timeout(Mqtt *mqtt);
 void mqtt_set_subscribe_topics(Mqtt *mqtt, 
 	char topics[][MQTT_TOPIC_NAME_MAX_LEN], uint32_t num_topics);
@@ -352,6 +363,5 @@ uint8_t mqtt_subscribe(char topic_to_subscribe[], uint8_t requested_qos);
 uint8_t	mqtt_send_response_to_publish_message(PublishMessage publish_message);
 uint8_t mqtt_get_last_publish_received_message(Mqtt *mqtt, 
 	PublishMessage *message);
-
 
 #endif // __MQTT_H__

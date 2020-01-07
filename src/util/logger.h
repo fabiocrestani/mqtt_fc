@@ -29,6 +29,8 @@ typedef enum EConnakReturnCode_ EConnakReturnCode;
 
 #define LOG_PUBLISH_PAYLOAD (FALSE)
 
+#define LOG_CONFIGURATION_FILE_PARSER (TRUE)
+
 #define LOG_DUMP (TRUE)
 #define LOG_DUMP_CONNECT (FALSE)
 #define LOG_DUMP_PUBLISH (FALSE)
