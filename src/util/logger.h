@@ -20,7 +20,7 @@ typedef enum EConnakReturnCode_ EConnakReturnCode;
 
 #define LOG_CONNECT (FALSE)
 #define LOG_CONNACK (FALSE)
-#define LOG_PUBLISH (FALSE)
+#define LOG_PUBLISH (TRUE)
 #define LOG_PUBACK (FALSE)
 #define LOG_PINGREQ (FALSE)
 #define LOG_PINGRESP (FALSE)

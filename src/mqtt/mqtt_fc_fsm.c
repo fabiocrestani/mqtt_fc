@@ -254,9 +254,23 @@ void mqtt_state_connected(Mqtt *mqtt)
 			}
 			else
 			{
-				sprintf(temp, "Error sending Publish message to topic %s", 
-					message.topic_name);
+				sprintf(temp, "Error sending Publish message to topic %s \
+(%d/%d)", message.topic_name, mqtt->retries + 1, 
+MQTT_SEND_PUBLISH_MAX_RETRIES);
 				logger_log_mqtt(TYPE_ERROR, temp);
+
+				(mqtt->retries)++;
+				if (mqtt->retries >= MQTT_SEND_PUBLISH_MAX_RETRIES)
+				{
+					char temp[512];
+					sprintf(temp, "PUBLISH max retries exceeded (%d) \
+Restarting TCP connection...",
+						mqtt->retries);
+					logger_log_mqtt(TYPE_ERROR, temp);
+					tcp_disconnect();
+					mqtt_fsm_set_state(mqtt, E_MQTT_STATE_TCP_CONNECT);
+				}
+
 			}
 		}
 

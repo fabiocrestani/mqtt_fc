@@ -13,6 +13,7 @@
 #include <netinet/in.h>
 #include <netdb.h>
 #include <fcntl.h>
+#include <signal.h>
 
 #include "mqtt_fc.h"
 #include "logger.h"
@@ -21,6 +22,8 @@
 int sockfd;
 struct sockaddr_in serv_addr;
 struct hostent *server;
+
+uint8_t connected = FALSE;
 
 CircularBuffer *circular_buffer;
 
@@ -34,6 +37,7 @@ uint8_t tcp_connect(char server_address[], uint32_t server_port)
     if (sockfd < 0)
     {
         logger_log_tcp(TYPE_ERROR, "ERROR opening socket");
+		connected = FALSE;
 		return FALSE;
     }
 
@@ -43,6 +47,7 @@ uint8_t tcp_connect(char server_address[], uint32_t server_port)
     if (server == NULL)
     {
         logger_log_tcp(TYPE_ERROR, "ERROR: No such host");
+		connected = FALSE;
         return FALSE;
     }
 
@@ -58,6 +63,10 @@ uint8_t tcp_connect(char server_address[], uint32_t server_port)
     tv.tv_sec = TCP_DEFAULT_CONNECT_TIMEOUT_S; // default: 10s
     tv.tv_usec = 0;
 
+	// Disable SIGPIPE when the connection is lost
+	// Reference: https://stackoverflow.com/questions/108183/how-to-prevent-sigpipes-or-handle-them-properly
+	signal(SIGPIPE, SIG_IGN);
+
 	if (select(sockfd + 1, NULL, &fdset, NULL, &tv) == 1)
     {
         int so_error;
@@ -66,6 +75,7 @@ uint8_t tcp_connect(char server_address[], uint32_t server_port)
         getsockopt(sockfd, SOL_SOCKET, SO_ERROR, &so_error, &len);
         if (so_error == 0) 
 		{
+			connected = TRUE;
             return TRUE;
         }
     }
@@ -77,6 +87,7 @@ uint8_t tcp_connect(char server_address[], uint32_t server_port)
 		TCP_DEFAULT_CONNECT_TIMEOUT_S);
 	logger_log_tcp(TYPE_ERROR, temp);
 
+	connected = FALSE;
 	return FALSE;
 }
 
@@ -90,13 +101,19 @@ void tcp_set_socket_non_blocking(void)
 	fcntl(sockfd, F_SETFL, fcntl(sockfd, F_GETFL, 0) | O_NONBLOCK);
 }
 
-uint8_t tcp_disconnect()
+uint8_t tcp_is_connected(void)
+{
+	return connected;
+}
+
+uint8_t tcp_disconnect(void)
 {
 	int ret = shutdown(sockfd, 2);
+	connected = FALSE;
 	return (ret == 0);
 }
 
-uint8_t tcp_send(char buffer[], uint32_t len)
+uint8_t tcp_send(const char buffer[], const uint32_t len)
 {
 	int n = 0;
 	uint32_t blocks = 0;
@@ -107,6 +124,7 @@ uint8_t tcp_send(char buffer[], uint32_t len)
 	    if (n < 0)
 	    {
 	        logger_log_tcp(TYPE_ERROR, "ERROR writing to socket");
+			connected = FALSE;
 			return FALSE;
 	    }
 

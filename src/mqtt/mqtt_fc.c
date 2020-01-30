@@ -64,6 +64,10 @@ void mqtt_init(void)
 	lc_mqtt.subscribe_topics_subscribed = 0;
 	lc_mqtt.received_publish_counter = 0;
 	lc_mqtt.timer_period_us = MQTT_DEFAULT_TIMER_PERIOD_US;
+
+	char temp[2048];
+	sprintf(temp, "Initializing MQTT (Version %d)", MQTT_VERSION);
+	logger_log_mqtt(TYPE_INFO, temp);
 }
 
 void mqtt_start(Mqtt *mqtt)

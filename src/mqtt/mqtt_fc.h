@@ -54,6 +54,7 @@ extern Timer timer_mqtt_fsm;
 #define MQTT_MAX_PING_TIMEOUT (20)
 #define MQTT_PING_RESPONSE_MAX_RETRIES (5)
 #define MQTT_SUBSCRIBE_RESPONSE_MAX_RETRIES (5)
+#define MQTT_SEND_PUBLISH_MAX_RETRIES (5)
 
 // Fowarding declaration of CircularMessageBuffer to solve cross-include issues
 typedef struct _circularMessageBuffer CircularMessageBuffer;
