@@ -1,6 +1,6 @@
 /*
  * main.c
- * mqtt_fc Producer example
+ * mqtt_fc Simple consumer example
  * Author: Fabio Crestani
  */
 
@@ -26,7 +26,6 @@
 #include "utils.h"
 #include "circular_buffer.h"
 #include "circular_message_buffer.h"
-#include "sensor_dummy.h"
 
 CircularBuffer mqtt_rx_buffer;
 CircularMessageBuffer mqtt_tx_message_buffer;
@@ -39,7 +38,7 @@ int main(int argc, char *argv[])
 	printf("\n\
 *********************************************************************\n\
 *                                                                   *\n\
-* MQTT FC - Producer example                                        *\n\
+* MQTT FC - Simple consumer example                                 *\n\
 * Author: Fabio Crestani                                            *\n\
 * Version: 1.0                                                      *\n\
 *                                                                   *\n\
@@ -81,12 +80,6 @@ int main(int argc, char *argv[])
 	}
 	mqtt_start(mqtt);
 
-	// Dummy sensor init
-	timer_init(&timer_sensor_dummy, TIMER_PERIOD_1_S * 2, 1);
-	timer_start(&timer_sensor_dummy);
-	dummy_sensor_set_mqtt_reference(mqtt);
-	dummy_sensor_set_mqtt_callback(mqtt_publish_handler_add_data_to_queue);
-
 	while (1)
 	{
 		// Polls TCP for input/output of data
@@ -95,9 +88,6 @@ int main(int argc, char *argv[])
 		// Polls MQTT main FSM
 		mqtt_poll(mqtt);
 
-		// Dummy sensor produces data and puts in mqtt_tx_buffer
-		dummy_sensor_poll();
-	
 		usleep(1000*1000);
 	}
 
