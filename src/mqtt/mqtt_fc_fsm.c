@@ -162,9 +162,14 @@ void mqtt_state_connect(Mqtt *mqtt)
 {
 	if (mqtt->substate == E_MQTT_SUBSTATE_SEND)
 	{
-		logger_log_mqtt(TYPE_OUTPUT, "Sending CONNECT message");
 		char mqtt_protocol_name[] = "MQTT";
-		char mqtt_client_id[] = "fabio";
+		char mqtt_client_id[128] = "fabio";
+		sprintf(mqtt_client_id, "mqtt_fc-%d", get_current_us());
+		char temp[1024];
+		sprintf(temp, 
+			"Sending CONNECT message with client id: %s", mqtt_client_id);
+		logger_log_mqtt(TYPE_OUTPUT, temp);
+
 		mqtt_connect(mqtt_protocol_name, mqtt_client_id);
 
 		mqtt->substate = E_MQTT_SUBSTATE_WAIT;
@@ -270,7 +275,6 @@ Restarting TCP connection...",
 					tcp_disconnect();
 					mqtt_fsm_set_state(mqtt, E_MQTT_STATE_TCP_CONNECT);
 				}
-
 			}
 		}
 
@@ -291,6 +295,7 @@ void mqtt_state_ping(Mqtt *mqtt)
 	if (mqtt->substate == E_MQTT_SUBSTATE_SEND)
 	{
 		// Sends ping request
+		logger_log_mqtt(TYPE_OUTPUT, "Sending PINGREQ message");
 		mqtt_ping_request();
 		mqtt->pong_received = FALSE;
 		mqtt->substate = E_MQTT_SUBSTATE_WAIT;
@@ -306,7 +311,7 @@ void mqtt_state_ping(Mqtt *mqtt)
 			uint32_t ping_stop_us = tv.tv_usec;
 			uint32_t ping_elapsed_us = ping_stop_us - mqtt->ping_start_us;
 
-			sprintf(temp, "PINGRESP received after %d us", ping_elapsed_us);
+			sprintf(temp, "PINGRESP was received after %d us", ping_elapsed_us);
 			logger_log_mqtt(TYPE_INPUT, temp);
 			mqtt_fsm_set_state(mqtt, E_MQTT_STATE_CONNECTED);
 		}
@@ -320,7 +325,8 @@ void mqtt_state_ping(Mqtt *mqtt)
 				sprintf(temp, "Ping max retries exceeded (%d).",
 					mqtt->retries);
 				logger_log_mqtt(TYPE_ERROR, temp);
-				mqtt_fsm_set_state(mqtt, E_MQTT_STATE_CONNECTED);
+				tcp_disconnect();
+				mqtt_fsm_set_state(mqtt, E_MQTT_STATE_TCP_CONNECT);
 			}
 		}
 	}	

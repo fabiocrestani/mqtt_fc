@@ -10,5 +10,6 @@
 #include <sys/time.h>
 
 char * get_current_date_time(void);
+int get_current_us(void);
 
 #endif // __DATE_H__

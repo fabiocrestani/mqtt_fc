@@ -24,3 +24,9 @@ char * get_current_date_time(void)
 	return buffer;
 }
 
+int get_current_us(void)
+{
+	struct timeval tv;
+	gettimeofday(&tv, NULL);
+	return tv.tv_usec;
+}
