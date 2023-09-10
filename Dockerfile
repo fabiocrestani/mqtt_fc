@@ -1,7 +1,8 @@
 # Build environment
 FROM alpine as build-env
 RUN apk add --no-cache build-base
-RUN apk add --no-cache musl-dev
+RUN apk add --no-cache -u musl
+RUN apk add --no-cache linux-headers
 
 COPY . mqtt_fc
 WORKDIR /mqtt_fc/examples/temperature_producer
