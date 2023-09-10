@@ -4,7 +4,6 @@ I have implemented a MQTT client for no specific reason. It was developed in a L
 
 ## Compilation of examples
 ~~~bash
-./configure
 cd examples/[desired example]
 make
 ~~~
