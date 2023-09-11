@@ -57,7 +57,7 @@ void pi_cpu_temperature_poll(void)
 	char buff[32];
 	fgets(buff, 32, f);
 	int temp_int = atoi(buff);
-	float temperature = temp_int / 10000.0;
+	float temperature = temp_int / 1000.0;
 	
 	// Log
 	char temp[512];
