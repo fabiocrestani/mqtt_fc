@@ -1,0 +1,15 @@
+[Unit]
+Description=MQTT FC
+After=network.target
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=1
+User=fabio
+WorkingDirectory=/home/fabio/workspace/mqtt_fc/build/pi-cpu-temperature-producer
+ExecStart=/home/fabio/workspace/mqtt_fc/build/pi-cpu-temperature-producer/pi-cpu-temperature-producer
+
+[Install]
+WantedBy=multi-user.target

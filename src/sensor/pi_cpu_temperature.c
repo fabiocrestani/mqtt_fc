@@ -58,7 +58,7 @@ void pi_cpu_temperature_poll(void)
 	fgets(buff, 32, f);
 	int temp_int = atoi(buff);
 	float temperature = temp_int / 1000.0;
-	
+
 	// Log
 	char temp[512];
 	sprintf(temp, "Temperature is %0.3f °C", temperature);
@@ -72,9 +72,10 @@ void pi_cpu_temperature_poll(void)
 		mqtt_add_data_ptr(
 			mqtt_ref,
 			"house/measurements/pi",
-			strlen(data), 
+			strlen(data),
 			data, E_QOS_NONE
 		); //E_QOS_PUBACK);
 	}
 
+	fclose(f);
 }
